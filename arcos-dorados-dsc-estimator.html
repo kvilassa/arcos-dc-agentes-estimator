@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSC Estimator — Arcos Dorados</title>
+<style>
+  :root {
+    color-scheme: light;
+    /* ── Arcos Dorados palette ── */
+    --azul:        #1B1F5E;
+    --azul-med:    #1B1F5E;
+    --azul-claro:  #EDE8DC;
+    --magenta:     #E8521A;
+    --magenta-claro:#FFF3E6;
+    --gris-bg:     #F5F0E8;
+    --gris-borde:  #D4CDB8;
+    --gris-texto:  #6B6B7B;
+    --negro:       #1B1F5E;
+    --blanco:      #FFFFFF;
+    --amarillo:    #FFF8E0;
+    --amarillo-borde: #FFB300;
+    --verde:       #1A7F5A;
+    --verde-claro: #E8F5EE;
+    --rojo:        #C0392B;
+    --rojo-claro:  #FDECEA;
+    --gold:        #FFB300;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--gris-bg);
+    color: var(--negro);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ─────────────────────────────────────── */
+  header {
+    background: var(--azul);
+    color: var(--blanco);
+    padding: 0 clamp(12px, 3vw, 32px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(27,31,94,0.35);
+    width: 100%;
+  }
+
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-ad {
+    height: 36px;
+    width: auto;
+    flex-shrink: 0;
+    filter: brightness(0) invert(1);
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .brand-text .company {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+
+  .brand-text .tool-name {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .header-badge {
+    background: rgba(255,179,0,0.2);
+    border: 1px solid rgba(255,179,0,0.5);
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+
+  /* Language switcher */
+  .lang-switcher {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .lang-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.7);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+
+  .lang-btn:hover { background: rgba(255,255,255,0.2); color: white; }
+
+  .lang-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--azul);
+  }
+
+  /* ── NAV TABS ─────────────────────────────────────── */
+  .nav-tabs {
+    background: var(--blanco);
+    border-bottom: 2px solid var(--gris-borde);
+    padding: 0 clamp(12px, 3vw, 32px);
+    display: flex;
+    gap: 0;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .nav-tab {
+    padding: 14px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gris-texto);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .nav-tab:hover { color: var(--azul-med); }
+
+  .nav-tab.active {
+    color: var(--azul);
+    border-bottom-color: var(--gold);
+  }
+
+  .tab-icon { font-size: 15px; }
+
+  /* ── MAIN LAYOUT ─────────────────────────────────────── */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .page-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
+    padding: 24px clamp(12px, 3vw, 32px);
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  /* ── PANEL IZQUIERDO ─────────────────────────────────── */
+  .main-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--blanco);
+    border: 1px solid var(--gris-borde);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 14px 20px;
+    background: var(--gris-bg);
+    border-bottom: 1px solid var(--gris-borde);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .card-header h2 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--azul);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .card-body { padding: 20px; }
+
+  /* ── INSTRUCCIONES ─────────────────────────────────── */
+  .instrucciones {
+    background: var(--azul-claro);
+    border: 1px solid #C8C0A8;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 12.5px;
+    color: var(--azul);
+    line-height: 1.6;
+  }
+
+  .instrucciones strong { font-weight: 700; }
+
+  .instrucciones .steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 20px;
+    margin-top: 8px;
+  }
+
+  .instrucciones .step {
+    display: flex;
+    gap: 7px;
+    align-items: flex-start;
+  }
+
+  .instrucciones .step .num {
+    background: var(--azul);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── NOTA DATA GRAPH ─────────────────────────────────── */
+  .nota-datagraph {
+    background: var(--magenta-claro);
+    border: 1px solid #F0C090;
+    border-left: 4px solid var(--magenta);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 12.5px;
+    color: #7A2500;
+    line-height: 1.6;
+  }
+
+  .nota-datagraph .nota-titulo {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--magenta);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .nota-datagraph ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .nota-datagraph li {
+    padding-left: 14px;
+    position: relative;
+  }
+
+  .nota-datagraph li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--magenta);
+    font-size: 10px;
+    top: 2px;
+  }
+
+  .nota-datagraph .formula {
+    background: rgba(232,82,26,0.12);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 11.5px;
+    font-weight: 600;
+    display: inline;
+  }
+
+  /* ── TABLA DE CASOS ─────────────────────────────────── */
+  .tabla-wrapper { overflow-x: auto; max-width: 100%; }
+
+  table.casos {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  table.casos thead th {
+    background: var(--azul);
+    color: var(--blanco);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  table.casos thead th.col-input { background: #2A2F7A; }
+  table.casos thead th.col-calc  { background: #0F1240; }
+
+  table.casos tbody tr {
+    border-bottom: 1px solid var(--gris-borde);
+    transition: background 0.1s;
+  }
+
+  table.casos tbody tr:hover { background: #F8F5EF; }
+
+  table.casos tbody tr.fila-ejemplo {
+    background: var(--amarillo);
+    opacity: 0.75;
+  }
+
+  table.casos tbody tr.fila-ejemplo:hover { opacity: 1; }
+
+  table.casos td {
+    padding: 8px 12px;
+    vertical-align: middle;
+  }
+
+  table.casos td.col-creditos {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-weight: 700;
+    color: var(--azul);
+    font-size: 13px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  table.casos td.col-creditos.cero {
+    color: var(--gris-texto);
+    font-weight: 400;
+  }
+
+  table.casos input[type="text"],
+  table.casos input[type="number"],
+  table.casos select {
+    width: 100%;
+    border: 1px solid var(--gris-borde);
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 12.5px;
+    font-family: inherit;
+    color: var(--negro);
+    background: var(--blanco);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    min-width: 0;
+  }
+
+  table.casos input[type="text"]:focus,
+  table.casos input[type="number"]:focus,
+  table.casos select:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(255,179,0,0.15);
+  }
+
+  table.casos .col-nombre { min-width: 150px; }
+  table.casos .col-tipo   { min-width: 200px; }
+  table.casos .col-amb    { min-width: 110px; }
+  table.casos .col-vol    { min-width: 120px; }
+  table.casos .col-freq   { min-width: 130px; }
+
+  .btn-agregar-fila {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    border: 2px dashed var(--gris-borde);
+    border-radius: 6px;
+    color: var(--azul);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+
+  .btn-agregar-fila:hover {
+    background: var(--azul-claro);
+    border-color: var(--gold);
+  }
+
+  .btn-eliminar {
+    background: none;
+    border: none;
+    color: var(--gris-texto);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+
+  .btn-eliminar:hover {
+    background: var(--rojo-claro);
+    color: var(--rojo);
+  }
+
+  /* ── PANEL DERECHO (STICKY SUMMARY) ──────────────────── */
+  .side-panel {
+    position: sticky;
+    top: 84px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .summary-card {
+    background: var(--blanco);
+    border: 1px solid var(--gris-borde);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .summary-card .summary-header {
+    background: var(--azul);
+    color: var(--blanco);
+    padding: 12px 18px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .total-creditos-display {
+    padding: 20px 18px;
+    text-align: center;
+    border-bottom: 1px solid var(--gris-borde);
+  }
+
+  .total-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gris-texto);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+
+  .total-numero {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: -0.02em;
+    transition: all 0.3s;
+    line-height: 1.1;
+  }
+
+  .total-numero.cambiando {
+    color: var(--magenta);
+    transform: scale(1.04);
+  }
+
+  .total-sublabel {
+    font-size: 11.5px;
+    color: var(--gris-texto);
+    margin-top: 3px;
+  }
+
+  .breakdown-list {
+    padding: 12px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  .breakdown-item .cat-name {
+    color: var(--gris-texto);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .breakdown-item .cat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .breakdown-item .cat-val {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-weight: 600;
+    color: var(--negro);
+    font-size: 12px;
+  }
+
+  .breakdown-item .cat-val.cero { color: var(--gris-borde); }
+
+  /* Allowance */
+  .allowance-section {
+    padding: 14px 18px;
+    border-top: 1px solid var(--gris-borde);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .allowance-titulo {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gris-texto);
+  }
+
+  .allowance-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .allowance-input-row input {
+    flex: 1;
+    border: 1px solid var(--gris-borde);
+    border-radius: 5px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--negro);
+    transition: border-color 0.15s;
+  }
+
+  .allowance-input-row input:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(255,179,0,0.15);
+  }
+
+  .allowance-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .allowance-stat {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  .allowance-stat .astat-label { color: var(--gris-texto); }
+  .allowance-stat .astat-val {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-weight: 600;
+    color: var(--negro);
+  }
+
+  .runway-bar-wrap {
+    background: var(--gris-borde);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .runway-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--verde);
+    transition: width 0.4s ease;
+  }
+
+  .runway-bar-fill.warning { background: #E67E22; }
+  .runway-bar-fill.danger  { background: var(--rojo); }
+
+  /* ── TARIFAS REF ─────────────────────────────────────── */
+  .tarifas-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px clamp(12px, 3vw, 20px);
+  }
+
+  .tarifa-cat-titulo {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 0;
+    margin-bottom: 6px;
+    border-bottom: 2px solid var(--gris-borde);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tarifa-cat-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  table.tarifas-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+
+  table.tarifas-tabla td {
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--gris-borde);
+  }
+
+  table.tarifas-tabla tr:last-child td { border-bottom: none; }
+  table.tarifas-tabla td:first-child { color: var(--negro); }
+  table.tarifas-tabla td.unidad { color: var(--gris-texto); width: 160px; }
+  table.tarifas-tabla td.prod {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-weight: 700;
+    color: var(--azul);
+    text-align: right;
+    width: 100px;
+  }
+  table.tarifas-tabla td.sandbox {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--gris-texto);
+    text-align: right;
+    width: 100px;
+  }
+
+  table.tarifas-tabla th {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gris-texto);
+    padding: 4px 10px 8px;
+    text-align: left;
+  }
+
+  table.tarifas-tabla th.right { text-align: right; }
+
+  /* ── AGENTES ─────────────────────────────────────────── */
+  .ag-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
+    padding: 24px clamp(12px, 3vw, 32px);
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  .ag-panel { display: flex; flex-direction: column; gap: 20px; }
+
+  .ag-instrucciones {
+    background: var(--azul-claro);
+    border: 1px solid #C8C0A8;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 12.5px;
+    color: var(--azul);
+    line-height: 1.6;
+  }
+
+  .ag-instrucciones .steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 20px;
+    margin-top: 8px;
+  }
+
+  .ag-instrucciones .step {
+    display: flex; gap: 7px; align-items: flex-start;
+  }
+
+  .ag-instrucciones .step .num {
+    background: var(--azul); color: white; font-size: 10px; font-weight: 700;
+    width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+
+  .ag-alert {
+    background: var(--amarillo);
+    border: 1px solid var(--amarillo-borde);
+    border-left: 4px solid #D4A000;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12.5px;
+    color: #5A4200;
+    line-height: 1.6;
+  }
+
+  .ag-alert-titulo {
+    font-weight: 700; font-size: 13px; color: #A07000;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+  }
+
+  .ag-alert ul { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .ag-alert li { padding-left: 14px; position: relative; }
+  .ag-alert li::before { content: '▸'; position: absolute; left: 0; color: #D4A000; font-size: 10px; top: 2px; }
+  .ag-alert .fc {
+    background: rgba(212,160,0,0.12); border-radius: 4px; padding: 2px 6px;
+    font-family: 'JetBrains Mono','Fira Code',monospace; font-size: 11.5px; font-weight: 600; display: inline;
+  }
+
+  /* Tabla de agentes */
+  table.ag-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  table.ag-tabla thead th {
+    background: var(--azul); color: var(--blanco); padding: 10px 12px;
+    text-align: left; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap;
+  }
+
+  table.ag-tabla thead th.col-input { background: #2A2F7A; }
+  table.ag-tabla thead th.col-calc  { background: #0F1240; }
+
+  table.ag-tabla tbody tr { border-bottom: 1px solid var(--gris-borde); transition: background 0.1s; }
+  table.ag-tabla tbody tr:hover { background: #F8F5EF; }
+  table.ag-tabla tbody tr.ag-ejemplo { background: var(--amarillo); opacity: 0.75; }
+  table.ag-tabla tbody tr.ag-ejemplo:hover { opacity: 1; }
+
+  table.ag-tabla td { padding: 8px 10px; vertical-align: middle; }
+
+  table.ag-tabla input[type="text"],
+  table.ag-tabla input[type="number"],
+  table.ag-tabla select {
+    width: 100%; border: 1px solid var(--gris-borde); border-radius: 5px;
+    padding: 5px 7px; font-size: 12.5px; font-family: inherit; color: var(--negro);
+    background: var(--blanco); transition: border-color 0.15s, box-shadow 0.15s; min-width: 0;
+  }
+
+  table.ag-tabla input:focus, table.ag-tabla select:focus {
+    outline: none; border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(255,179,0,0.15);
+  }
+
+  .ag-fc-val {
+    font-family: 'JetBrains Mono','Fira Code',monospace;
+    font-weight: 700; color: var(--azul); font-size: 13px;
+    text-align: right; white-space: nowrap;
+  }
+
+  .ag-fc-val.cero { color: var(--gris-texto); font-weight: 400; }
+
+  /* Buffer selector */
+  .buffer-selector {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;
+  }
+
+  .buffer-btn {
+    padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--gris-borde);
+    font-size: 12px; font-weight: 600; cursor: pointer; background: var(--blanco);
+    color: var(--gris-texto); transition: all 0.15s; font-family: inherit;
+  }
+
+  .buffer-btn:hover { border-color: var(--gold); color: var(--azul); }
+  .buffer-btn.active {
+    background: var(--azul); border-color: var(--azul); color: white;
+  }
+
+  /* Summary agentes */
+  .ag-summary-section {
+    padding: 14px 18px; border-top: 1px solid var(--gris-borde);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .ag-summary-titulo {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--gris-texto);
+  }
+
+  .ag-stat-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px;
+  }
+
+  .ag-stat-label { color: var(--gris-texto); }
+  .ag-stat-val {
+    font-family: 'JetBrains Mono','Fira Code',monospace;
+    font-weight: 600; color: var(--negro); font-size: 12px;
+  }
+
+  .ag-stat-val.highlight { color: var(--magenta); font-size: 13px; font-weight: 700; }
+
+  .ag-divider { border: none; border-top: 1px solid var(--gris-borde); margin: 4px 0; }
+
+  /* ── MISC ─────────────────────────────────────────────── */
+  .fuente-nota {
+    font-size: 11.5px;
+    color: var(--gris-texto);
+    text-align: right;
+    padding: 10px 20px;
+    border-top: 1px solid var(--gris-borde);
+  }
+
+  .col-acciones { width: 36px; text-align: center; }
+
+  @media (max-width: 1100px) {
+    .page-layout { grid-template-columns: 1fr 260px; }
+    .ag-layout    { grid-template-columns: 1fr 260px; }
+  }
+
+  @media (max-width: 900px) {
+    .page-layout { grid-template-columns: 1fr; }
+    .side-panel { position: static; }
+    .instrucciones .steps { grid-template-columns: 1fr; }
+    .ag-layout { grid-template-columns: 1fr; }
+    .ag-instrucciones .steps { grid-template-columns: 1fr; }
+    .nav-tab { padding: 12px 14px; font-size: 12px; }
+  }
+
+  @keyframes pulse-num {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+
+  .cargando { animation: pulse-num 0.8s ease; }
+
+  /* Footer */
+  .page-footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 11px;
+    color: var(--gris-texto);
+    border-top: 1px solid var(--gris-borde);
+    margin-top: 24px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-area">
+    <img class="logo-ad" src="https://salus.arcosdorados.net/Autenticacao/Content/logoac.png" alt="Arcos Dorados" onerror="this.style.display='none'">
+    <div class="brand-text">
+      <span class="company">Arcos Dorados</span>
+      <span class="tool-name">DSC Estimator</span>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span class="header-badge">Data Services Credits</span>
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('es')">🇪🇸 ES</button>
+      <button class="lang-btn" onclick="setLang('pt')">🇧🇷 PT</button>
+      <button class="lang-btn" onclick="setLang('en')">🇺🇸 EN</button>
+    </div>
+  </div>
+</header>
+
+<!-- NAV TABS -->
+<nav class="nav-tabs">
+  <div class="nav-tab active tab-btn" data-tab="calculadora">
+    <span class="tab-icon">⚡</span>
+    <span data-i18n="tabDC">Calculadora — Data Cloud</span>
+  </div>
+  <div class="nav-tab tab-btn" data-tab="tarifas">
+    <span class="tab-icon">📋</span>
+    <span data-i18n="tabRates">Tarifas de referencia</span>
+  </div>
+  <div class="nav-tab tab-btn" data-tab="agentes">
+    <span class="tab-icon">🤖</span>
+    <span data-i18n="tabAgents">Calculadora — Agentes</span>
+  </div>
+  <div class="nav-tab tab-btn" data-tab="glosario">
+    <span class="tab-icon">📖</span>
+    <span data-i18n="tabGlosario">Glosario de Usage Types</span>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB: CALCULADORA
+     ════════════════════════════════════════════════════════ -->
+<div class="tab-content active" id="tab-calculadora">
+  <div class="page-layout">
+
+    <div class="main-panel">
+
+      <div class="instrucciones">
+        <strong data-i18n="howTo">Cómo usar:</strong>
+        <div class="steps">
+          <div class="step"><span class="num">1</span><span data-i18n="dcStep1">Completá las celdas editables de cada fila: caso de uso, tipo, ambiente, volumen y frecuencia.</span></div>
+          <div class="step"><span class="num">2</span><span data-i18n="dcStep2">Los créditos se calculan solos. <em>Volumen</em> = filas que procesa cada ejecución.</span></div>
+          <div class="step"><span class="num">3</span><span data-i18n="dcStep3">Para streaming o consumos puntuales, elegí "Mensual / Puntual" y cargá el total mensual.</span></div>
+          <div class="step"><span class="num">4</span><span data-i18n="dcStep4">Revisá el total y el desglose a la derecha. Cargá tu allowance para ver el runway.</span></div>
+        </div>
+      </div>
+
+      <div class="nota-datagraph">
+        <div class="nota-titulo">⚠️ <span data-i18n="warningTitle">Nota: consumo especial de Data Graph</span></div>
+        <ul>
+          <li><strong>Batch Data Transform:</strong> <span data-i18n="warningTransform">se genera/actualiza el Data Graph → suma todos los registros de <em>input</em> de la Data Transform para obtener los registros procesados por ejecución. Tarifa: <span class="formula">400 créditos por 1M registros</span>.</span></li>
+          <li><strong>Data Queries:</strong> <span data-i18n="warningQueries">cada consulta al Data Graph consume Data Queries. Tarifa: <span class="formula">2 créditos por 1M registros</span>. Para estimar el volumen: si la consulta filtra sólo por PK del objeto principal → asumir <span class="formula">600.000 registros por consulta</span>. Si tiene filtros adicionales → asumir la totalidad de registros del DMO principal presentes en el DG.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 data-i18n="casosTitle">Casos de uso</h2>
+          <span style="font-size:11px;color:var(--gris-texto)" data-i18n="casosSubtitle">Celdas editables en cada fila</span>
+        </div>
+        <div class="card-body" style="padding: 16px;">
+          <div class="tabla-wrapper">
+            <table class="casos" id="tabla-casos">
+              <thead>
+                <tr>
+                  <th class="col-input" data-i18n="colUseCase">Caso de uso</th>
+                  <th class="col-input" data-i18n="colUsageType">Usage Type</th>
+                  <th class="col-input" data-i18n="colEnv">Ambiente</th>
+                  <th style="min-width:90px" data-i18n="colUnit">Unidad</th>
+                  <th class="col-input" style="min-width:120px" data-i18n="colVol">Volumen / ejecución</th>
+                  <th class="col-input" style="min-width:130px" data-i18n="colFreq">Frecuencia</th>
+                  <th class="col-calc" style="min-width:70px;text-align:right" data-i18n="colExec">Ejec./mes</th>
+                  <th class="col-calc" style="min-width:100px;text-align:right" data-i18n="colMonthVol">Vol. mensual</th>
+                  <th class="col-calc" style="min-width:110px;text-align:right" data-i18n="colCredits">Créditos/mes</th>
+                  <th class="col-acciones"></th>
+                </tr>
+              </thead>
+              <tbody id="filas-casos"></tbody>
+            </table>
+          </div>
+          <button class="btn-agregar-fila" id="btn-agregar" onclick="agregarFila()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span data-i18n="addUseCase">Agregar caso de uso</span>
+          </button>
+        </div>
+        <div class="fuente-nota" data-i18n="dcSource">Fuente de tarifas: Salesforce Customer Data Cloud — Rate Card, Last Updated August 2025.</div>
+      </div>
+
+    </div>
+
+    <!-- Panel derecho sticky -->
+    <div class="side-panel">
+      <div class="summary-card">
+        <div class="summary-header" data-i18n="summaryTitle">Resumen mensual</div>
+        <div class="total-creditos-display">
+          <div class="total-label" data-i18n="totalCredits">Total créditos / mes</div>
+          <div class="total-numero" id="total-display">0</div>
+          <div class="total-sublabel">Data Services Credits (DSC)</div>
+        </div>
+
+        <div class="breakdown-list" id="breakdown-list"></div>
+
+        <div class="allowance-section">
+          <div class="allowance-titulo" data-i18n="allowanceLabel">Allowance disponible (opcional)</div>
+          <div class="allowance-input-row">
+            <input type="number" id="allowance-input" placeholder="ej. 5000000" oninput="recalcularAllowance()">
+          </div>
+          <div class="allowance-stats" id="allowance-stats" style="display:none">
+            <div class="allowance-stat">
+              <span class="astat-label" data-i18n="creditsYear">Créditos/año</span>
+              <span class="astat-val" id="allow-anual">—</span>
+            </div>
+            <div class="allowance-stat">
+              <span class="astat-label" data-i18n="runwayMonths">Meses de runway</span>
+              <span class="astat-val" id="allow-runway">—</span>
+            </div>
+            <div class="allowance-stat">
+              <span class="astat-label" data-i18n="allowancePct">% allowance / año</span>
+              <span class="astat-val" id="allow-pct">—</span>
+            </div>
+            <div class="runway-bar-wrap">
+              <div class="runway-bar-fill" id="runway-bar" style="width:0%"></div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--gris-texto);line-height:1.5" data-i18n="runwayNote">
+            Meses de runway = cuántos meses dura la allowance al ritmo actual de consumo.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB: TARIFAS
+     ════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-tarifas">
+  <div style="max-width:900px;margin:24px auto;padding:0 clamp(12px,3vw,32px);width:100%;">
+    <div class="card">
+      <div class="card-header">
+        <h2 data-i18n="ratesTitle">Tarifas — Salesforce Data Cloud</h2>
+        <span style="font-size:11px;color:var(--gris-texto)" data-i18n="ratesSubtitle">Rate Card · Last Updated August 2025</span>
+      </div>
+      <div class="tarifas-grid" id="tarifas-contenido"></div>
+      <div class="fuente-nota" data-i18n="ratesSource">Fuente: Salesforce Customer Data Cloud Platform Services — Rate Card August 2025. Multiplicadores en Data Services Credits (DSC).</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB: AGENTES
+     ════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-agentes">
+  <div class="ag-layout">
+
+    <div class="ag-panel">
+
+      <div class="ag-instrucciones">
+        <strong data-i18n="howTo">Cómo usar:</strong>
+        <div class="steps">
+          <div class="step"><span class="num">1</span><span data-i18n="agStep1">Completá cada agente: nombre, tipo de complejidad, ambiente, interacciones mensuales y acciones por interacción.</span></div>
+          <div class="step"><span class="num">2</span><span data-i18n="agStep2">Los Flex Credits se calculan solos. Fórmula: <em>Vol. mensual × acciones × FC por acción</em>.</span></div>
+          <div class="step"><span class="num">3</span><span data-i18n="agStep3">Si el agente consulta Data Cloud, activá el toggle — los DSC de queries se calculan aparte en la otra calculadora.</span></div>
+          <div class="step"><span class="num">4</span><span data-i18n="agStep4">Aplicá un buffer de seguridad según la madurez del caso de uso.</span></div>
+        </div>
+      </div>
+
+      <div class="ag-alert">
+        <div class="ag-alert-titulo">⚡ <span data-i18n="fcRefTitle">Tarifas Flex Credits (FC) — referencia rápida</span></div>
+        <ul>
+          <li data-i18n="fcTip1"><strong>Acción estándar:</strong> <span class="fc">20 FC / acción</span> en producción · <span class="fc">16 FC</span> en sandbox.</li>
+          <li data-i18n="fcTip2"><strong>Acción de voz:</strong> <span class="fc">30 FC / acción</span> en producción · <span class="fc">24 FC</span> en sandbox. 50% más cara que estándar.</li>
+          <li data-i18n="fcTip3"><strong>Prompt estándar (LLM):</strong> <span class="fc">4 FC / 2.000 tokens</span> · Prompt avanzado: <span class="fc">16 FC / 2.000 tokens</span>.</li>
+          <li data-i18n="fcTip4"><strong>Help Agent resolution:</strong> <span class="fc">400 FC / resolución exitosa</span>.</li>
+          <li data-i18n="fcTip5"><strong>Turnos sin acción</strong> (saludos, chit-chat) no consumen crédito.</li>
+          <li data-i18n="fcTip6"><strong>Tip:</strong> slot fill ahorra créditos — pedir varios datos en 1 turno (20 FC) vs. 3 turnos separados (60 FC).</li>
+          <li data-i18n="fcTip7"><strong>Atención:</strong> Flows y Apex corriendo dentro del agente NO reducen el consumo — el billing es por la acción disparada. Atlas Reasoning es el "consumidor #1" de créditos en agentes sobre-diseñados.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 data-i18n="agentsTitle">Agentes</h2>
+          <span style="font-size:11px;color:var(--gris-texto)" data-i18n="agentsSubtitle">Completá las celdas de cada agente</span>
+        </div>
+        <div class="card-body" style="padding:16px;">
+          <div class="tabla-wrapper">
+            <table class="ag-tabla" id="tabla-agentes">
+              <thead>
+                <tr>
+                  <th class="col-input" style="min-width:140px" data-i18n="agColName">Agente / caso de uso</th>
+                  <th class="col-input" style="min-width:160px" data-i18n="agColType">Tipo / complejidad</th>
+                  <th class="col-input" style="min-width:100px" data-i18n="agColEnv">Ambiente</th>
+                  <th class="col-input" style="min-width:120px" data-i18n="agColInterac">Interacc. / mes</th>
+                  <th class="col-input" style="min-width:90px" data-i18n="agColActions">Acciones / turno</th>
+                  <th class="col-calc" style="min-width:80px;text-align:right" data-i18n="agColFC">FC / acción</th>
+                  <th class="col-calc" style="min-width:110px;text-align:right" data-i18n="agColFCMonth">FC / mes</th>
+                  <th class="col-acciones"></th>
+                </tr>
+              </thead>
+              <tbody id="filas-agentes"></tbody>
+            </table>
+          </div>
+          <button class="btn-agregar-fila" onclick="agregarAgente()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span data-i18n="addAgent">Agregar agente</span>
+          </button>
+        </div>
+        <div class="fuente-nota" data-i18n="agSource">Fuente: Salesforce Agentforce Flex Credits Rate Card.</div>
+      </div>
+
+      <div class="ag-alert" style="background:#F0FBF5;border-color:#A0D8BC;border-left-color:#1A7F5A;">
+        <div class="ag-alert-titulo" style="color:#1A7F5A;">🔓 <span data-i18n="unmeteredTitle">Agentes internos: posible escenario unmetered</span></div>
+        <ul style="color:#0D4A2A;">
+          <li data-i18n="unmetered1">Los agentes internos iniciados por humano (botones, Quick Actions, Einstein for Service) pueden ser <strong>unmetered</strong> con el Add-on correcto — no consumen Flex Credits.</li>
+          <li data-i18n="unmetered2">Requiere tener asignado el Permission Set License <strong>"Unmetered User Based AI"</strong> a cada usuario. Sin ese PSL, consumen crédito aunque teóricamente sean gratis.</li>
+          <li data-i18n="unmetered3">Los agentes autónomos (trigger automático, sin intervención humana) siempre son metered.</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Panel derecho sticky -->
+    <div class="side-panel">
+      <div class="summary-card">
+        <div class="summary-header" data-i18n="agSummaryTitle">Resumen — Agentforce</div>
+
+        <div class="total-creditos-display">
+          <div class="total-label" data-i18n="totalFC">Total Flex Credits / mes</div>
+          <div class="total-numero" id="ag-total-fc">0</div>
+          <div class="total-sublabel">Flex Credits (FC)</div>
+        </div>
+
+        <div class="ag-summary-section">
+          <hr class="ag-divider">
+
+          <div class="ag-summary-titulo" data-i18n="bufferTitle">Buffer de seguridad</div>
+          <div class="buffer-selector">
+            <button class="buffer-btn active" data-buffer="0" onclick="setBuffer(this, 0)" data-i18n="bufNone">Sin buffer</button>
+            <button class="buffer-btn" data-buffer="0.20" onclick="setBuffer(this, 0.20)" data-i18n="buf20">+20% moderado</button>
+            <button class="buffer-btn" data-buffer="0.30" onclick="setBuffer(this, 0.30)" data-i18n="buf30">+30% agresivo</button>
+            <button class="buffer-btn" data-buffer="0.50" onclick="setBuffer(this, 0.50)" data-i18n="buf50">+50% incierto</button>
+          </div>
+          <div class="ag-stat-row" id="ag-con-buffer-row" style="display:none">
+            <span class="ag-stat-label" data-i18n="fcWithBuffer">FC con buffer</span>
+            <span class="ag-stat-val highlight" id="ag-fc-buffer">—</span>
+          </div>
+
+          <hr class="ag-divider">
+
+          <div class="ag-summary-titulo" data-i18n="breakdownTitle">Desglose por tipo</div>
+          <div id="ag-breakdown"></div>
+        </div>
+
+        <div class="allowance-section">
+          <div class="allowance-titulo" data-i18n="agAllowanceLabel">Allowance Flex Credits (opcional)</div>
+          <div class="allowance-input-row">
+            <input type="number" id="ag-allowance-input" placeholder="ej. 500000" oninput="recalcularAgAllowance()">
+          </div>
+          <div class="allowance-stats" id="ag-allowance-stats" style="display:none">
+            <div class="allowance-stat">
+              <span class="astat-label" data-i18n="fcYearEst">FC/año estimado</span>
+              <span class="astat-val" id="ag-allow-anual">—</span>
+            </div>
+            <div class="allowance-stat">
+              <span class="astat-label" data-i18n="runwayMonths">Meses de runway</span>
+              <span class="astat-val" id="ag-allow-runway">—</span>
+            </div>
+            <div class="allowance-stat">
+              <span class="astat-label" data-i18n="allowancePct">% allowance / año</span>
+              <span class="astat-val" id="ag-allow-pct">—</span>
+            </div>
+            <div class="runway-bar-wrap">
+              <div class="runway-bar-fill" id="ag-runway-bar" style="width:0%"></div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--gris-texto);line-height:1.5" data-i18n="agRunwayNote">
+            Runway = cuántos meses dura el allowance al ritmo actual.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB: GLOSARIO DE USAGE TYPES
+     ════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-glosario">
+  <div style="max-width:960px;margin:24px auto;padding:0 clamp(12px,3vw,32px);width:100%;">
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <h2 data-i18n="glosarioTitle">Glosario — Usage Types de Data Services Credits</h2>
+        <span style="font-size:11px;color:var(--gris-texto)" data-i18n="glosarioSubtitle">Qué significa cada tipo de consumo y cuándo se incurre en él</span>
+      </div>
+      <div class="card-body" style="padding:16px 20px;">
+        <p style="font-size:13px;color:var(--gris-texto);line-height:1.6;" data-i18n="glosarioIntro">
+          Cada fila de la calculadora corresponde a un <strong>Usage Type</strong> — una operación facturada en Data Services Credits (DSC). La tabla a continuación explica qué hace cada tipo, en qué escenario se activa y cuál es la unidad de medida.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── CATEGORÍA: Connect, Harmonize & Unify ── -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header" style="background:linear-gradient(135deg,#0047BB 0%,#1B1F5E 100%);">
+        <h2 style="color:#fff;font-size:14px;">Connect, Harmonize &amp; Unify</h2>
+        <span style="color:rgba(255,255,255,0.75);font-size:11px;" data-i18n="glosCatConnectDesc">Ingesta, transformación y preparación de datos en Data Cloud</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--gris-bg);">
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:220px;" data-i18n="glosColType">Usage Type</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);" data-i18n="glosColDesc">Descripción</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:160px;" data-i18n="glosColUnit">Unidad de medida</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--gris-borde);">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Internal Data Pipeline</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosIDP">
+                Mueve datos desde nubes Salesforce internas (Sales Cloud, Service Cloud, Marketing Cloud, etc.) hacia Data Cloud a través de los conectores nativos de Salesforce. <strong>Tarifa cero</strong>: Salesforce no cobra DSC por esta ingestión — es el mecanismo preferido para traer datos CRM propios.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gris-borde);background:#fafaf8;">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>External Data Pipeline (Batch)</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosEDPBatch">
+                Ingesta en lote de fuentes externas a Salesforce: bases de datos on-premise, data lakes, archivos CSV/JSON subidos vía API, buckets S3, etc. Los datos son procesados, mapeados a DMOs y escritos en el almacén de Data Cloud. Se factura por cada millón de filas procesadas.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gris-borde);">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>External Data Pipeline (Streaming)</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosEDPStream">
+                Ingesta continua en tiempo real de fuentes externas: eventos de apps móviles, clics web, streams de Kafka, webhooks. Los datos llegan en flujo constante y se procesan casi en tiempo real. Tarifa más alta que batch debido al procesamiento continuo.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gris-borde);background:#fafaf8;">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Data Transforms (Batch)</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosDTBatch">
+                Transformaciones SQL programadas que consolidan, enriquecen o calculan métricas sobre DMOs existentes en Data Cloud (ej.: construir un DMO de "clientes activos 90 días" desde múltiples fuentes). Se ejecutan en ventanas horarias o diarias. También se activa cuando se genera o actualiza un Data Graph.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gris-borde);">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Data Transforms (Streaming)</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosDTStream">
+                Versión en tiempo real de las Data Transforms: las reglas SQL se aplican sobre el stream de datos a medida que ingresan, sin esperar una ventana batch. Útil para enriquecimientos inmediatos como calcular el score de un cliente en el instante de la transacción.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gris-borde);background:#fafaf8;">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Unstructured Data Processed</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosUDP">
+                Procesamiento de contenido no estructurado: documentos PDF, transcripciones de llamadas, emails, imágenes. Data Cloud extrae texto, vectoriza y almacena embeddings para búsqueda semántica y casos de IA generativa. Se factura por megabyte procesado — la unidad más pequeña de la Rate Card.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">MB procesado</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gris-borde);">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Intelligent Processing</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosIP">
+                Procesamiento de datos no estructurados con modelos de IA integrados: OCR en documentos, extracción de entidades (NER), clasificación automática de tickets, análisis de sentimiento en texto libre. Se activa cuando Data Cloud aplica un modelo de ML en la etapa de ingesta o transformación del contenido. Tarifa más alta que Unstructured Data por el costo computacional de la inferencia.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">MB procesado</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gris-borde);background:#fafaf8;">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Data Federation or Sharing Rows Accessed</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosFed">
+                Acceso a datos federados que residen en sistemas externos sin moverlos a Data Cloud: Snowflake, BigQuery, Redshift vía Zero-Copy o Data Federation. Cada fila leída desde el sistema externo para enriquecer un perfil o segmento cuenta. El dato nunca se copia — solo se consulta en origen.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas accedidas</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gris-borde);">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Data Share Rows Shared (Data Out)</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosShare">
+                Compartición de datos procesados en Data Cloud hacia otros sistemas externos: exportar segmentos a Snowflake, publicar perfiles unificados en un data lake propio del cliente, o habilitar acceso de lectura a terceros. Se factura por las filas enviadas "hacia afuera" del ecosistema Data Cloud.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas compartidas</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gris-borde);background:#fafaf8;">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Private Connect Data Processed</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosPC">
+                Transferencia de datos a través de Salesforce Private Connect — conexión privada y cifrada entre Data Cloud y sistemas externos del cliente sin pasar por la internet pública (equivalente a AWS PrivateLink). Se factura por gigabyte transferido. Recomendado para industrias reguladas (banca, salud).
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">GB procesado</td>
+            </tr>
+            <tr>
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Profile Unification</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosPU">
+                El motor de Identity Resolution de Data Cloud compara, deduplica y consolida registros de distintas fuentes para construir un Unified Individual Profile. Cada fila procesada en la ejecución del Identity Resolution (IR) cuenta. Es el usage type más costoso de la categoría — un IR sobre millones de registros puede consumir DSC de forma significativa.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CATEGORÍA: E2E Real-Time Processing ── -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header" style="background:linear-gradient(135deg,#8B1A5E 0%,#5C1040 100%);">
+        <h2 style="color:#fff;font-size:14px;">E2E Real-Time Processing</h2>
+        <span style="color:rgba(255,255,255,0.75);font-size:11px;" data-i18n="glosCatRTDesc">Eventos y acciones en tiempo real sub-segundo</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--gris-bg);">
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:220px;" data-i18n="glosColType">Usage Type</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);" data-i18n="glosColDesc">Descripción</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:160px;" data-i18n="glosColUnit">Unidad de medida</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Sub-second Real-Time Events</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosSRTE">
+                Procesamiento de eventos con latencia sub-segundo: un evento (clic, apertura de email, transacción) llega, enriquece el perfil unificado en tiempo real y dispara una acción (mostrar oferta, enviar notificación push, actualizar score) — todo en menos de 1 segundo. Es el mecanismo que alimenta la "próxima mejor oferta" en el momento exacto de la interacción. Es la tarifa más alta de toda la Rate Card por la infraestructura dedicada que requiere.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M eventos / API / acciones</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CATEGORÍA: Analyze & Predict ── -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header" style="background:linear-gradient(135deg,#1A7F5A 0%,#0F5240 100%);">
+        <h2 style="color:#fff;font-size:14px;">Analyze &amp; Predict</h2>
+        <span style="color:rgba(255,255,255,0.75);font-size:11px;" data-i18n="glosCatAnalyzeDesc">Insights calculados, predicciones e inferencias de modelos de IA</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--gris-bg);">
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:220px;" data-i18n="glosColType">Usage Type</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);" data-i18n="glosColDesc">Descripción</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:160px;" data-i18n="glosColUnit">Unidad de medida</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--gris-borde);">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Calculated Insights (Batch)</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosCIBatch">
+                Métricas y KPIs calculados mediante SQL sobre los perfiles unificados, ejecutados en ventanas programadas (horarias, diarias, semanales). Ejemplos: "total gastado en 90 días", "frecuencia de visitas en el último mes", "ticket promedio". Los resultados se escriben como atributos en el Unified Profile y quedan disponibles para segmentación.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gris-borde);background:#fafaf8;">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Calculated Insights (Streaming)</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosCIStream">
+                Versión en tiempo real de los Calculated Insights: el cálculo ocurre en el instante en que llega un evento, sin esperar la ventana batch. Ideal para actualizar un "score de propensión" o "saldo acumulado de puntos" en tiempo real durante la interacción del cliente.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+            <tr>
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Inferences</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosInf">
+                Ejecución de modelos de Machine Learning propios del cliente (importados vía Amazon SageMaker, Google Vertex AI, etc.) o modelos nativos de Einstein Prediction Builder sobre los perfiles de Data Cloud. Cada predicción generada (ej.: "probabilidad de churn", "lifetime value estimado", "próxima categoría a comprar") cuenta como una inferencia. Distinto de los Flex Credits de Agentforce — estos son modelos de ML clásico.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M inferencias</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CATEGORÍA: Act ── -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header" style="background:linear-gradient(135deg,#C0392B 0%,#8B2020 100%);">
+        <h2 style="color:#fff;font-size:14px;">Act</h2>
+        <span style="color:rgba(255,255,255,0.75);font-size:11px;" data-i18n="glosCatActDesc">Consultas y acciones de activación basadas en datos del Data Graph</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--gris-bg);">
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:220px;" data-i18n="glosColType">Usage Type</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);" data-i18n="glosColDesc">Descripción</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:160px;" data-i18n="glosColUnit">Unidad de medida</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--gris-borde);">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Data Queries</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosDQ">
+                Consultas a un <em>Data Graph</em> de Data Cloud — el grafo de conocimiento que conecta perfiles, transacciones y eventos. Se activa principalmente cuando Agentforce consulta el perfil de un cliente para personalizar una respuesta. Tarifa muy baja (2 DSC/1M filas) pero puede acumularse con alto volumen de consultas. Regla de estimación: si la query filtra por PK → 600K registros; si tiene filtros adicionales → total del DMO principal.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+            <tr>
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Streaming Actions (including Lookups)</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosSA">
+                Acciones disparadas en tiempo real desde Data Cloud hacia sistemas externos: enviar un evento a Marketing Cloud Engagement, actualizar un registro en Sales Cloud, llamar a una API externa, o hacer un "lookup" enriqueciendo datos en tránsito. Cada acción o lookup enviado como parte del flujo streaming cuenta. Incluye las integraciones bidireccionales de Agentforce con Data Cloud.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CATEGORÍA: Segmentation & Activation ── -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header" style="background:linear-gradient(135deg,#D4700A 0%,#9B4F00 100%);">
+        <h2 style="color:#fff;font-size:14px;">Segmentation &amp; Activation</h2>
+        <span style="color:rgba(255,255,255,0.75);font-size:11px;" data-i18n="glosCatSegDesc">Construcción de segmentos y envío de audiencias a canales</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--gris-bg);">
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:220px;" data-i18n="glosColType">Usage Type</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);" data-i18n="glosColDesc">Descripción</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:160px;" data-i18n="glosColUnit">Unidad de medida</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--gris-borde);">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Segment Rows Processed</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosSRP">
+                Evaluación de criterios de segmentación sobre los perfiles unificados para construir o actualizar un segmento de audiencia. Cada vez que Data Cloud recorre los perfiles para calcular quién entra o sale del segmento, se cobran las filas examinadas. Los segmentos con refresh frecuente (horario o diario) generan mayor consumo.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gris-borde);background:#fafaf8;">
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Batch Activation</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosBA">
+                Envío programado de un segmento de audiencia a un canal de marketing: Marketing Cloud Engagement, Meta Ads, Google Ads, Amazon Ads, Salesforce CDP partners. Data Cloud exporta las filas del segmento al destino en una ventana batch. Tarifa la más baja de Segmentation &amp; Activation porque el costo mayor ya fue en construir el segmento.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+            <tr>
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Activate DMO - Streaming</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosADS">
+                Activación en tiempo real de cambios en un Data Model Object (DMO) hacia sistemas externos. Cuando un perfil cambia de segmento o un atributo se actualiza, el cambio se propaga inmediatamente al canal destino sin esperar un ciclo batch. Útil para personalización en tiempo real en apps, sitios web o call centers. Tarifa alta por la infraestructura de streaming dedicada.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">1M filas procesadas</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CATEGORÍA: Compute ── -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header" style="background:linear-gradient(135deg,#4A5568 0%,#2D3748 100%);">
+        <h2 style="color:#fff;font-size:14px;">Compute</h2>
+        <span style="color:rgba(255,255,255,0.75);font-size:11px;" data-i18n="glosCatComputeDesc">Extensiones de código y lógica personalizada</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--gris-bg);">
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:220px;" data-i18n="glosColType">Usage Type</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);" data-i18n="glosColDesc">Descripción</th>
+              <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--gris-borde);width:160px;" data-i18n="glosColUnit">Unidad de medida</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:12px 14px;vertical-align:top;"><strong>Code Extension</strong></td>
+              <td style="padding:12px 14px;vertical-align:top;line-height:1.6;" data-i18n="glosCE">
+                Ejecución de código personalizado (Python, Node.js) dentro del entorno de Data Cloud para lógica de negocio que no puede expresarse en SQL: algoritmos de scoring propietarios, integraciones complejas, validaciones customizadas. Se factura por <em>Compute Unit</em> — una unidad basada en CPU + tiempo de ejecución. Usar con moderación; preferir Data Transforms SQL cuando sea posible.
+              </td>
+              <td style="padding:12px 14px;vertical-align:top;color:var(--gris-texto);">Compute Unit</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Nota de fuente -->
+    <div class="fuente-nota" style="margin-bottom:24px;" data-i18n="glosSource">
+      Fuente: Salesforce Data Cloud Rate Card (agosto 2025) · Salesforce Help: "Data Cloud Credits and Usage" (help.salesforce.com/s/articleView?id=sf.c360_a_data_credits.htm) · Documentación de producto: Salesforce Data Cloud Platform Services.
+    </div>
+
+  </div>
+</div>
+
+<div class="page-footer">Arcos Dorados &amp; Salesforce — DSC Estimator v2.0 · Nov 2026</div>
+
+<!-- ════════════════════════════════════════════════════════
+     JAVASCRIPT — lógica 100% idéntica al original
+     ════════════════════════════════════════════════════════ -->
+<script>
+// ── DATOS ────────────────────────────────────────────────
+
+const TARIFAS = [
+  // [usageType, categoria, unidad, escala, prod, sandbox]
+  ["Internal Data Pipeline",            "Connect, Harmonize & Unify",    "Por 1M filas procesadas",       1000000, 0,     0],
+  ["External Data Pipeline (Batch)",    "Connect, Harmonize & Unify",    "Por 1M filas procesadas",       1000000, 2000,  1600],
+  ["External Data Pipeline (Streaming)","Connect, Harmonize & Unify",    "Por 1M filas procesadas",       1000000, 5000,  4000],
+  ["Data Transforms (Batch)",           "Connect, Harmonize & Unify",    "Por 1M filas procesadas",       1000000, 400,   320],
+  ["Data Transforms (Streaming)",       "Connect, Harmonize & Unify",    "Por 1M filas procesadas",       1000000, 5000,  4000],
+  ["Unstructured Data Processed",       "Connect, Harmonize & Unify",    "Por MB procesado",              1,       60,    48],
+  ["Intelligent Processing",            "Connect, Harmonize & Unify",    "Por MB procesado",              1,       750,   600],
+  ["Data Federation or Sharing Rows Accessed","Connect, Harmonize & Unify","Por 1M filas accedidas",    1000000, 70,    56],
+  ["Data Share Rows Shared (Data Out)", "Connect, Harmonize & Unify",    "Por 1M filas compartidas",      1000000, 800,   640],
+  ["Private Connect Data Processed",    "Connect, Harmonize & Unify",    "Por GB procesado",              1,       500,   400],
+  ["Profile Unification",               "Connect, Harmonize & Unify",    "Por 1M filas procesadas",       1000000, 100000,80000],
+  ["Sub-second Real-Time Events",       "E2E Real-Time Processing",      "Por 1M eventos/API/acciones",   1000000, 70000, 56000],
+  ["Calculated Insights (Batch)",       "Analyze & Predict",             "Por 1M filas procesadas",       1000000, 15,    12],
+  ["Calculated Insights (Streaming)",   "Analyze & Predict",             "Por 1M filas procesadas",       1000000, 800,   640],
+  ["Inferences",                        "Analyze & Predict",             "Por 1M inferencias",            1000000, 3500,  2800],
+  ["Data Queries",                      "Act",                           "Por 1M filas procesadas",       1000000, 2,     1.6],
+  ["Streaming Actions (including Lookups)","Act",                        "Por 1M filas procesadas",       1000000, 800,   640],
+  ["Segment Rows Processed",            "Segmentation & Activation",     "Por 1M filas procesadas",       1000000, 20,    16],
+  ["Batch Activation",                  "Segmentation & Activation",     "Por 1M filas procesadas",       1000000, 10,    8],
+  ["Activate DMO - Streaming",          "Segmentation & Activation",     "Por 1M filas procesadas",       1000000, 1600,  1280],
+  ["Code Extension",                    "Compute",                       "Por Compute Unit",              1,       40,    32],
+];
+
+const FRECUENCIAS = {
+  "Cada 15 min":      2880,
+  "Cada 30 min":      1440,
+  "Cada hora":        720,
+  "Cada 2 h":         360,
+  "Cada 4 h":         180,
+  "Cada 6 h":         120,
+  "Cada 12 h":        60,
+  "Diario":           30,
+  "Semanal":          4,
+  "Mensual / Puntual":1,
+};
+
+const CATEGORIAS_ORDEN = [
+  "Connect, Harmonize & Unify",
+  "E2E Real-Time Processing",
+  "Analyze & Predict",
+  "Act",
+  "Segmentation & Activation",
+  "Compute",
+];
+
+const CAT_COLORES = {
+  "Connect, Harmonize & Unify":  "#0047BB",
+  "E2E Real-Time Processing":    "#8B1A5E",
+  "Analyze & Predict":           "#1A7F5A",
+  "Act":                         "#C0392B",
+  "Segmentation & Activation":   "#D4700A",
+  "Compute":                     "#6B7A99",
+};
+
+// ── FILAS ────────────────────────────────────────────────
+let filas = [];
+let idCounter = 0;
+
+const EJEMPLOS = [
+  { nombre: "(Ej.) Segmento DIARIO",    tipo: "Segment Rows Processed", amb: "Producción", vol: 5000000, freq: "Diario",   nota: "1×/día → 30 ejec./mes" },
+  { nombre: "(Ej.) Rapid Segment - 4h", tipo: "Segment Rows Processed", amb: "Producción", vol: 5000000, freq: "Cada 4 h", nota: "6× el volumen del diario" },
+];
+
+function agregarFila(datos) {
+  const id = ++idCounter;
+  const fila = datos || { nombre: "", tipo: "", amb: "Producción", vol: "", freq: "Diario", nota: "", esEjemplo: false };
+  fila.id = id;
+  fila.esEjemplo = datos ? !!datos.esEjemplo : false;
+  filas.push(fila);
+  renderFilas();
+}
+
+function eliminarFila(id) {
+  filas = filas.filter(f => f.id !== id);
+  renderFilas();
+  recalcular();
+}
+
+function getTarifaRow(tipo) {
+  return TARIFAS.find(t => t[0] === tipo) || null;
+}
+
+function getEjecMes(freq) {
+  const n = parseFloat(freq);
+  if (!isNaN(n) && n > 0) return n;
+  return FRECUENCIAS[freq] || 1;
+}
+
+function calcularCreditos(fila) {
+  const tr = getTarifaRow(fila.tipo);
+  if (!tr) return { ejec: 0, volMensual: 0, creditos: 0, unidad: "—", categoria: "—" };
+  const [, categoria, unidad, escala, prod, sandbox] = tr;
+  const mult = fila.amb === "Sandbox" ? sandbox : prod;
+  const ejec = getEjecMes(fila.freq);
+  const vol = parseFloat(fila.vol) || 0;
+  const volMensual = vol * ejec;
+  const creditos = (volMensual / escala) * mult;
+  return { ejec, volMensual, creditos, unidad, categoria };
+}
+
+function renderFilas() {
+  const tbody = document.getElementById("filas-casos");
+  const usageTypes = TARIFAS.map(t => t[0]);
+
+  tbody.innerHTML = "";
+
+  filas.forEach(fila => {
+    const { ejec, volMensual, creditos, unidad } = calcularCreditos(fila);
+    const tr = document.createElement("tr");
+    if (fila.esEjemplo) tr.className = "fila-ejemplo";
+
+    const freqOptions = Object.keys(FRECUENCIAS).map(k =>
+      `<option value="${k}" ${fila.freq === k ? "selected" : ""}>${k}</option>`
+    ).join("");
+    const frecNumero = parseFloat(fila.freq);
+    const tieneCustomFreq = !isNaN(frecNumero) && !FRECUENCIAS[fila.freq];
+
+    const tipoOptions = ["", ...usageTypes].map(t =>
+      `<option value="${t}" ${fila.tipo === t ? "selected" : ""}>${t || "— elegir —"}</option>`
+    ).join("");
+
+    const ambOptions = ["Producción", "Sandbox"].map(a =>
+      `<option value="${a}" ${fila.amb === a ? "selected" : ""}>${a}</option>`
+    ).join("");
+
+    const creditosStr = creditos > 0
+      ? creditos.toLocaleString("es-AR", {maximumFractionDigits: 1})
+      : "—";
+    const ejecStr = ejec > 0 ? ejec.toLocaleString("es-AR") : "—";
+    const volStr = volMensual > 0 ? volMensual.toLocaleString("es-AR") : "—";
+
+    tr.innerHTML = `
+      <td class="col-nombre"><input type="text" placeholder="Nombre del caso" value="${escHtml(fila.nombre)}" onchange="updateFila(${fila.id}, 'nombre', this.value)"></td>
+      <td class="col-tipo"><select onchange="updateFila(${fila.id}, 'tipo', this.value)">${tipoOptions}</select></td>
+      <td class="col-amb"><select onchange="updateFila(${fila.id}, 'amb', this.value)">${ambOptions}</select></td>
+      <td style="color:var(--gris-texto);font-size:12px;white-space:nowrap">${unidad !== "—" ? unidad : ""}</td>
+      <td class="col-vol"><input type="number" min="0" placeholder="0" value="${fila.vol}" onchange="updateFila(${fila.id}, 'vol', this.value)"></td>
+      <td class="col-freq">
+        <select onchange="updateFilaFreq(${fila.id}, this.value)">
+          ${freqOptions}
+          <option value="custom" ${tieneCustomFreq ? "selected" : ""}>Número exacto…</option>
+        </select>
+      </td>
+      <td style="text-align:right;font-family:monospace;font-size:12.5px;color:var(--gris-texto)">${ejecStr}</td>
+      <td style="text-align:right;font-family:monospace;font-size:12.5px;color:var(--gris-texto)">${volStr}</td>
+      <td class="col-creditos ${creditos === 0 ? 'cero' : ''}">${creditosStr}</td>
+      <td class="col-acciones"><button class="btn-eliminar" onclick="eliminarFila(${fila.id})" title="Eliminar fila">×</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  recalcular();
+}
+
+function updateFila(id, campo, valor) {
+  const fila = filas.find(f => f.id === id);
+  if (!fila) return;
+  fila[campo] = valor;
+  fila.esEjemplo = false;
+  renderFilas();
+}
+
+function updateFilaFreq(id, valor) {
+  const fila = filas.find(f => f.id === id);
+  if (!fila) return;
+  if (valor === "custom") {
+    const num = prompt("Ingresá la cantidad exacta de ejecuciones por mes:");
+    const n = parseFloat(num);
+    if (!isNaN(n) && n > 0) { fila.freq = String(n); }
+  } else {
+    fila.freq = valor;
+  }
+  fila.esEjemplo = false;
+  renderFilas();
+}
+
+function escHtml(str) {
+  return (str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── RECALCULAR TOTALES ────────────────────────────────────
+
+let totalActual = 0;
+
+function recalcular() {
+  const porCategoria = {};
+  CATEGORIAS_ORDEN.forEach(c => porCategoria[c] = 0);
+
+  let total = 0;
+  filas.forEach(fila => {
+    const { creditos, categoria } = calcularCreditos(fila);
+    total += creditos;
+    if (categoria in porCategoria) porCategoria[categoria] += creditos;
+  });
+
+  const el = document.getElementById("total-display");
+  if (total !== totalActual) {
+    el.classList.add("cambiando");
+    setTimeout(() => el.classList.remove("cambiando"), 350);
+  }
+  totalActual = total;
+  el.textContent = total > 0 ? total.toLocaleString("es-AR", {maximumFractionDigits: 1}) : "0";
+
+  const bl = document.getElementById("breakdown-list");
+  bl.innerHTML = CATEGORIAS_ORDEN.map(cat => {
+    const val = porCategoria[cat];
+    const color = CAT_COLORES[cat];
+    return `
+      <div class="breakdown-item">
+        <span class="cat-name">
+          <span class="cat-dot" style="background:${color}"></span>
+          <span style="font-size:11.5px">${cat}</span>
+        </span>
+        <span class="cat-val ${val === 0 ? 'cero' : ''}">
+          ${val > 0 ? val.toLocaleString("es-AR", {maximumFractionDigits: 1}) : "—"}
+        </span>
+      </div>
+    `;
+  }).join("");
+
+  recalcularAllowance();
+}
+
+function recalcularAllowance() {
+  const allowRaw = document.getElementById("allowance-input").value;
+  const allow = parseFloat(allowRaw);
+  const statsEl = document.getElementById("allowance-stats");
+
+  if (!isNaN(allow) && allow > 0 && totalActual > 0) {
+    statsEl.style.display = "flex";
+    const anual = totalActual * 12;
+    const runway = allow / totalActual;
+    const pct = (anual / allow) * 100;
+
+    document.getElementById("allow-anual").textContent = anual.toLocaleString("es-AR", {maximumFractionDigits: 0});
+    document.getElementById("allow-runway").textContent = runway.toFixed(1) + " meses";
+    document.getElementById("allow-pct").textContent = pct.toFixed(2) + "%";
+
+    const barEl = document.getElementById("runway-bar");
+    const barPct = Math.min(pct, 100);
+    barEl.style.width = barPct + "%";
+    barEl.className = "runway-bar-fill" + (pct > 80 ? " danger" : pct > 50 ? " warning" : "");
+  } else if (!isNaN(allow) && allow > 0 && totalActual === 0) {
+    statsEl.style.display = "flex";
+    document.getElementById("allow-anual").textContent = "0";
+    document.getElementById("allow-runway").textContent = "∞";
+    document.getElementById("allow-pct").textContent = "0.00%";
+    document.getElementById("runway-bar").style.width = "0%";
+  } else {
+    statsEl.style.display = "none";
+  }
+}
+
+// ── TARIFAS REF ────────────────────────────────────────────
+function renderTarifas() {
+  const contenedor = document.getElementById("tarifas-contenido");
+
+  contenedor.innerHTML = CATEGORIAS_ORDEN.map(cat => {
+    const filasCat = TARIFAS.filter(t => t[1] === cat);
+    if (!filasCat.length) return "";
+    const color = CAT_COLORES[cat];
+    const filasTr = filasCat.map(t => `
+      <tr>
+        <td>${t[0]}</td>
+        <td class="unidad">${t[2]}</td>
+        <td class="prod">${t[4].toLocaleString("es-AR")}</td>
+        <td class="sandbox">${t[5].toLocaleString("es-AR")}</td>
+      </tr>
+    `).join("");
+    return `
+      <div class="tarifa-cat-group">
+        <div class="tarifa-cat-titulo" style="color:${color}">
+          <span class="tarifa-cat-dot" style="background:${color}"></span>
+          ${cat}
+        </div>
+        <table class="tarifas-tabla">
+          <thead><tr>
+            <th>Usage Type</th>
+            <th>Unidad</th>
+            <th class="right">Producción</th>
+            <th class="right">Sandbox</th>
+          </tr></thead>
+          <tbody>${filasTr}</tbody>
+        </table>
+      </div>
+    `;
+  }).join("");
+}
+
+// ── TABS ──────────────────────────────────────────────────
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+// ── INIT ──────────────────────────────────────────────────
+agregarFila();
+renderTarifas();
+
+// ════════════════════════════════════════════════════════
+// CALCULADORA DE AGENTES
+// ════════════════════════════════════════════════════════
+
+const AG_TIPOS = [
+  ["flow",     "Flow puro",             "flow",     0,   0,   "Solo Flow, sin LLM. Sin consumo de créditos."],
+  ["standard", "Standard (RAG / Apex)", "standard", 20,  16,  "Acción estándar: 20 FC prod / 16 FC sandbox."],
+  ["atlas",    "Atlas Reasoning",       "atlas",    20,  16,  "Multi-paso con razonamiento. Puede disparar varias acciones por interacción."],
+  ["voz",      "Voz (Voice)",           "voz",      30,  24,  "Acción de voz: 30 FC prod / 24 FC sandbox."],
+  ["help",     "Help Agent",            "help",     400, 320, "400 FC por resolución exitosa."],
+];
+
+let agFilas = [];
+let agIdCounter = 0;
+let agBuffer = 0;
+
+const AG_EJEMPLOS = [
+  { nombre: "(Ej.) Bot de atención digital", tipo: "standard", amb: "Producción", interacciones: 10000, acciones: 3, esEjemplo: true },
+  { nombre: "(Ej.) Asistente voz IVR",       tipo: "voz",      amb: "Producción", interacciones: 5000,  acciones: 4, esEjemplo: true },
+];
+
+function agregarAgente(datos) {
+  const id = ++agIdCounter;
+  const fila = datos
+    ? { ...datos, id }
+    : { id, nombre: "", tipo: "standard", amb: "Producción", interacciones: "", acciones: 3, esEjemplo: false };
+  agFilas.push(fila);
+  renderAgentes();
+}
+
+function eliminarAgente(id) {
+  agFilas = agFilas.filter(f => f.id !== id);
+  renderAgentes();
+}
+
+function updateAgente(id, campo, valor) {
+  const f = agFilas.find(f => f.id === id);
+  if (!f) return;
+  f[campo] = valor;
+  f.esEjemplo = false;
+  renderAgentes();
+}
+
+function getFCPorAccion(tipo, amb) {
+  const t = AG_TIPOS.find(t => t[0] === tipo);
+  if (!t) return 0;
+  return amb === "Sandbox" ? t[4] : t[3];
+}
+
+function calcularFC(fila) {
+  const fc = getFCPorAccion(fila.tipo, fila.amb);
+  const interacciones = parseFloat(fila.interacciones) || 0;
+  const acciones = parseFloat(fila.acciones) || 0;
+  const total = interacciones * acciones * fc;
+  return { fc, total };
+}
+
+function renderAgentes() {
+  const tbody = document.getElementById("filas-agentes");
+  tbody.innerHTML = "";
+
+  agFilas.forEach(fila => {
+    const { fc, total } = calcularFC(fila);
+    const tr = document.createElement("tr");
+    if (fila.esEjemplo) tr.className = "ag-ejemplo";
+
+    const tipoOptions = AG_TIPOS.map(t =>
+      `<option value="${t[0]}" ${fila.tipo === t[0] ? "selected" : ""}>${t[1]}</option>`
+    ).join("");
+
+    const ambOptions = ["Producción", "Sandbox"].map(a =>
+      `<option value="${a}" ${fila.amb === a ? "selected" : ""}>${a}</option>`
+    ).join("");
+
+    const fcStr = total > 0 ? total.toLocaleString("es-AR", {maximumFractionDigits: 0}) : "—";
+    const fcUnit = fc > 0 ? fc : "—";
+
+    tr.innerHTML = `
+      <td><input type="text" placeholder="Nombre del agente" value="${escHtml(fila.nombre)}" onchange="updateAgente(${fila.id}, 'nombre', this.value)"></td>
+      <td><select onchange="updateAgente(${fila.id}, 'tipo', this.value)">${tipoOptions}</select></td>
+      <td><select onchange="updateAgente(${fila.id}, 'amb', this.value)">${ambOptions}</select></td>
+      <td><input type="number" min="0" placeholder="0" value="${fila.interacciones}" onchange="updateAgente(${fila.id}, 'interacciones', this.value)"></td>
+      <td><input type="number" min="1" placeholder="3" value="${fila.acciones}" onchange="updateAgente(${fila.id}, 'acciones', this.value)"></td>
+      <td style="text-align:right;font-family:monospace;font-size:12.5px;color:var(--gris-texto)">${fcUnit}</td>
+      <td class="ag-fc-val ${total === 0 ? 'cero' : ''}">${fcStr}</td>
+      <td class="col-acciones"><button class="btn-eliminar" onclick="eliminarAgente(${fila.id})" title="Eliminar">×</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  recalcularAgentes();
+}
+
+function recalcularAgentes() {
+  let totalFC = 0;
+  const porTipo = {};
+  AG_TIPOS.forEach(t => porTipo[t[0]] = 0);
+
+  agFilas.forEach(f => {
+    const { total } = calcularFC(f);
+    totalFC += total;
+    if (f.tipo in porTipo) porTipo[f.tipo] += total;
+  });
+
+  const el = document.getElementById("ag-total-fc");
+  el.classList.add("cambiando");
+  setTimeout(() => el.classList.remove("cambiando"), 350);
+  el.textContent = totalFC > 0 ? totalFC.toLocaleString("es-AR", {maximumFractionDigits: 0}) : "0";
+
+  if (agBuffer > 0 && totalFC > 0) {
+    const conBuf = totalFC * (1 + agBuffer);
+    document.getElementById("ag-con-buffer-row").style.display = "flex";
+    document.getElementById("ag-fc-buffer").textContent = conBuf.toLocaleString("es-AR", {maximumFractionDigits: 0});
+  } else {
+    document.getElementById("ag-con-buffer-row").style.display = "none";
+  }
+
+  const AG_COLORES = { flow:"#1A7F5A", standard:"#0047BB", atlas:"#8B1A5E", voz:"#C0392B", help:"#D4700A" };
+  const bd = document.getElementById("ag-breakdown");
+  bd.innerHTML = AG_TIPOS.filter(t => porTipo[t[0]] > 0 || agFilas.some(f => f.tipo === t[0])).map(t => {
+    const val = porTipo[t[0]];
+    const color = AG_COLORES[t[0]];
+    return `
+      <div class="ag-stat-row" style="margin-bottom:3px">
+        <span class="ag-stat-label" style="display:flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0"></span>
+          <span style="font-size:11.5px">${t[1]}</span>
+        </span>
+        <span class="ag-stat-val" style="${val===0?'color:var(--gris-borde)':''}">
+          ${val > 0 ? val.toLocaleString("es-AR",{maximumFractionDigits:0}) : "—"}
+        </span>
+      </div>
+    `;
+  }).join("") || '<span style="font-size:12px;color:var(--gris-texto)">Sin datos aún.</span>';
+
+  recalcularAgAllowance(totalFC);
+}
+
+function recalcularAgAllowance(totalFC) {
+  const fc = totalFC !== undefined ? totalFC : (() => {
+    let t = 0; agFilas.forEach(f => { t += calcularFC(f).total; }); return t;
+  })();
+  const allowRaw = document.getElementById("ag-allowance-input").value;
+  const allow = parseFloat(allowRaw);
+  const statsEl = document.getElementById("ag-allowance-stats");
+
+  if (!isNaN(allow) && allow > 0 && fc > 0) {
+    statsEl.style.display = "flex";
+    const anual = fc * 12;
+    const runway = allow / fc;
+    const pct = (anual / allow) * 100;
+    document.getElementById("ag-allow-anual").textContent = anual.toLocaleString("es-AR", {maximumFractionDigits: 0});
+    document.getElementById("ag-allow-runway").textContent = runway.toFixed(1) + " meses";
+    document.getElementById("ag-allow-pct").textContent = pct.toFixed(2) + "%";
+    const barEl = document.getElementById("ag-runway-bar");
+    barEl.style.width = Math.min(pct, 100) + "%";
+    barEl.className = "runway-bar-fill" + (pct > 80 ? " danger" : pct > 50 ? " warning" : "");
+  } else if (!isNaN(allow) && allow > 0 && fc === 0) {
+    statsEl.style.display = "flex";
+    document.getElementById("ag-allow-anual").textContent = "0";
+    document.getElementById("ag-allow-runway").textContent = "∞";
+    document.getElementById("ag-allow-pct").textContent = "0.00%";
+    document.getElementById("ag-runway-bar").style.width = "0%";
+  } else {
+    statsEl.style.display = "none";
+  }
+}
+
+function setBuffer(btn, val) {
+  document.querySelectorAll(".buffer-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  agBuffer = val;
+  recalcularAgentes();
+}
+
+agregarAgente();
+
+// ════════════════════════════════════════════════════════
+// INTERNACIONALIZAÇÃO (i18n) — tradução sem tocar na lógica
+// ════════════════════════════════════════════════════════
+
+const I18N = {
+  es: {
+    tabDC: "Calculadora — Data Cloud",
+    tabRates: "Tarifas de referencia",
+    tabAgents: "Calculadora — Agentes",
+    howTo: "Cómo usar:",
+    dcStep1: "Completá las celdas editables de cada fila: caso de uso, tipo, ambiente, volumen y frecuencia.",
+    dcStep2: "Los créditos se calculan solos. <em>Volumen</em> = filas que procesa cada ejecución.",
+    dcStep3: "Para streaming o consumos puntuales, elegí \"Mensual / Puntual\" y cargá el total mensual.",
+    dcStep4: "Revisá el total y el desglose a la derecha. Cargá tu allowance para ver el runway.",
+    warningTitle: "Nota: consumo especial de Data Graph",
+    warningTransform: "se genera/actualiza el Data Graph → suma todos los registros de <em>input</em> de la Data Transform para obtener los registros procesados por ejecución. Tarifa: <span class=\"formula\">400 créditos por 1M registros</span>.",
+    warningQueries: "cada consulta al Data Graph consume Data Queries. Tarifa: <span class=\"formula\">2 créditos por 1M registros</span>. Para estimar el volumen: si la consulta filtra sólo por PK del objeto principal → asumir <span class=\"formula\">600.000 registros por consulta</span>. Si tiene filtros adicionales → asumir la totalidad de registros del DMO principal presentes en el DG.",
+    casosTitle: "Casos de uso", casosSubtitle: "Celdas editables en cada fila",
+    colUseCase: "Caso de uso", colUsageType: "Usage Type", colEnv: "Ambiente", colUnit: "Unidad",
+    colVol: "Volumen / ejecución", colFreq: "Frecuencia", colExec: "Ejec./mes",
+    colMonthVol: "Vol. mensual", colCredits: "Créditos/mes",
+    addUseCase: "Agregar caso de uso",
+    dcSource: "Fuente de tarifas: Salesforce Customer Data Cloud — Rate Card, Last Updated August 2025.",
+    summaryTitle: "Resumen mensual", totalCredits: "Total créditos / mes",
+    allowanceLabel: "Allowance disponible (opcional)", creditsYear: "Créditos/año",
+    runwayMonths: "Meses de runway", allowancePct: "% allowance / año",
+    runwayNote: "Meses de runway = cuántos meses dura la allowance al ritmo actual de consumo.",
+    ratesTitle: "Tarifas — Salesforce Data Cloud", ratesSubtitle: "Rate Card · Last Updated August 2025",
+    ratesSource: "Fuente: Salesforce Customer Data Cloud Platform Services — Rate Card August 2025. Multiplicadores en Data Services Credits (DSC).",
+    agStep1: "Completá cada agente: nombre, tipo de complejidad, ambiente, interacciones mensuales y acciones por interacción.",
+    agStep2: "Los Flex Credits se calculan solos. Fórmula: <em>Vol. mensual × acciones × FC por acción</em>.",
+    agStep3: "Si el agente consulta Data Cloud, activá el toggle — los DSC de queries se calculan aparte en la otra calculadora.",
+    agStep4: "Aplicá un buffer de seguridad según la madurez del caso de uso.",
+    fcRefTitle: "Tarifas Flex Credits (FC) — referencia rápida",
+    fcTip1: "<strong>Acción estándar:</strong> <span class=\"fc\">20 FC / acción</span> en producción · <span class=\"fc\">16 FC</span> en sandbox.",
+    fcTip2: "<strong>Acción de voz:</strong> <span class=\"fc\">30 FC / acción</span> en producción · <span class=\"fc\">24 FC</span> en sandbox. 50% más cara que estándar.",
+    fcTip3: "<strong>Prompt estándar (LLM):</strong> <span class=\"fc\">4 FC / 2.000 tokens</span> · Prompt avanzado: <span class=\"fc\">16 FC / 2.000 tokens</span>.",
+    fcTip4: "<strong>Help Agent resolution:</strong> <span class=\"fc\">400 FC / resolución exitosa</span>.",
+    fcTip5: "<strong>Turnos sin acción</strong> (saludos, chit-chat) no consumen crédito.",
+    fcTip6: "<strong>Tip:</strong> slot fill ahorra créditos — pedir varios datos en 1 turno (20 FC) vs. 3 turnos separados (60 FC).",
+    fcTip7: "<strong>Atención:</strong> Flows y Apex corriendo dentro del agente NO reducen el consumo — el billing es por la acción disparada. Atlas Reasoning es el \"consumidor #1\" de créditos en agentes sobre-diseñados.",
+    agentsTitle: "Agentes", agentsSubtitle: "Completá las celdas de cada agente",
+    agColName: "Agente / caso de uso", agColType: "Tipo / complejidad", agColEnv: "Ambiente",
+    agColInterac: "Interacc. / mes", agColActions: "Acciones / turno",
+    agColFC: "FC / acción", agColFCMonth: "FC / mes",
+    addAgent: "Agregar agente",
+    agSource: "Fuente: Salesforce Agentforce Flex Credits Rate Card.",
+    unmeteredTitle: "Agentes internos: posible escenario unmetered",
+    unmetered1: "Los agentes internos iniciados por humano (botones, Quick Actions, Einstein for Service) pueden ser <strong>unmetered</strong> con el Add-on correcto — no consumen Flex Credits.",
+    unmetered2: "Requiere tener asignado el Permission Set License <strong>\"Unmetered User Based AI\"</strong> a cada usuario. Sin ese PSL, consumen crédito aunque teóricamente sean gratis.",
+    unmetered3: "Los agentes autónomos (trigger automático, sin intervención humana) siempre son metered.",
+    agSummaryTitle: "Resumen — Agentforce", totalFC: "Total Flex Credits / mes",
+    bufferTitle: "Buffer de seguridad",
+    bufNone: "Sin buffer", buf20: "+20% moderado", buf30: "+30% agresivo", buf50: "+50% incierto",
+    fcWithBuffer: "FC con buffer",
+    breakdownTitle: "Desglose por tipo",
+    agAllowanceLabel: "Allowance Flex Credits (opcional)", fcYearEst: "FC/año estimado",
+    agRunwayNote: "Runway = cuántos meses dura el allowance al ritmo actual.",
+    tabGlosario: "Glosario de Usage Types",
+    glosarioTitle: "Glosario — Usage Types de Data Services Credits",
+    glosarioSubtitle: "Qué significa cada tipo de consumo y cuándo se incurre en él",
+    glosarioIntro: "Cada fila de la calculadora corresponde a un <strong>Usage Type</strong> — una operación facturada en Data Services Credits (DSC). La tabla a continuación explica qué hace cada tipo, en qué escenario se activa y cuál es la unidad de medida.",
+    glosCatConnectDesc: "Ingesta, transformación y preparación de datos en Data Cloud",
+    glosCatRTDesc: "Eventos y acciones en tiempo real sub-segundo",
+    glosCatAnalyzeDesc: "Insights calculados, predicciones e inferencias de modelos de IA",
+    glosCatActDesc: "Consultas y acciones de activación basadas en datos del Data Graph",
+    glosCatSegDesc: "Construcción de segmentos y envío de audiencias a canales",
+    glosCatComputeDesc: "Extensiones de código y lógica personalizada",
+    glosColType: "Usage Type", glosColDesc: "Descripción", glosColUnit: "Unidad de medida",
+    glosIDP: "Mueve datos desde nubes Salesforce internas (Sales Cloud, Service Cloud, Marketing Cloud, etc.) hacia Data Cloud a través de los conectores nativos de Salesforce. <strong>Tarifa cero</strong>: Salesforce no cobra DSC por esta ingestión — es el mecanismo preferido para traer datos CRM propios.",
+    glosEDPBatch: "Ingesta en lote de fuentes externas a Salesforce: bases de datos on-premise, data lakes, archivos CSV/JSON subidos vía API, buckets S3, etc. Los datos son procesados, mapeados a DMOs y escritos en el almacén de Data Cloud. Se factura por cada millón de filas procesadas.",
+    glosEDPStream: "Ingesta continua en tiempo real de fuentes externas: eventos de apps móviles, clics web, streams de Kafka, webhooks. Los datos llegan en flujo constante y se procesan casi en tiempo real. Tarifa más alta que batch debido al procesamiento continuo.",
+    glosDTBatch: "Transformaciones SQL programadas que consolidan, enriquecen o calculan métricas sobre DMOs existentes en Data Cloud. También se activa cuando se genera o actualiza un Data Graph. Se ejecutan en ventanas horarias o diarias.",
+    glosDTStream: "Versión en tiempo real de las Data Transforms: las reglas SQL se aplican sobre el stream de datos a medida que ingresan. Útil para enriquecimientos inmediatos como calcular el score de un cliente en el instante de la transacción.",
+    glosUDP: "Procesamiento de contenido no estructurado: documentos PDF, transcripciones, emails, imágenes. Data Cloud extrae texto, vectoriza y almacena embeddings para búsqueda semántica y casos de IA generativa. Se factura por megabyte procesado.",
+    glosIP: "Procesamiento de datos no estructurados con modelos de IA integrados: OCR, extracción de entidades (NER), clasificación automática, análisis de sentimiento. Se activa cuando Data Cloud aplica un modelo de ML en la etapa de ingesta. Tarifa más alta que Unstructured Data por el costo computacional de la inferencia.",
+    glosFed: "Acceso a datos federados que residen en sistemas externos sin moverlos a Data Cloud: Snowflake, BigQuery, Redshift vía Zero-Copy o Data Federation. Cada fila leída desde el sistema externo cuenta. El dato nunca se copia — solo se consulta en origen.",
+    glosShare: "Compartición de datos procesados en Data Cloud hacia sistemas externos: exportar segmentos a Snowflake, publicar perfiles unificados en un data lake propio del cliente. Se factura por las filas enviadas \"hacia afuera\" del ecosistema Data Cloud.",
+    glosPC: "Transferencia de datos a través de Salesforce Private Connect — conexión privada y cifrada sin pasar por la internet pública (equivalente a AWS PrivateLink). Se factura por gigabyte transferido. Recomendado para industrias reguladas (banca, salud).",
+    glosPU: "El motor de Identity Resolution de Data Cloud compara, deduplica y consolida registros de distintas fuentes para construir un Unified Individual Profile. Cada fila procesada en la ejecución del IR cuenta. Es el usage type más costoso de la categoría.",
+    glosSRTE: "Procesamiento de eventos con latencia sub-segundo: un evento llega, enriquece el perfil unificado en tiempo real y dispara una acción — todo en menos de 1 segundo. Es el mecanismo que alimenta la \"próxima mejor oferta\" en el momento exacto de la interacción. Es la tarifa más alta de toda la Rate Card.",
+    glosCIBatch: "Métricas y KPIs calculados mediante SQL sobre los perfiles unificados, ejecutados en ventanas programadas. Ejemplos: \"total gastado en 90 días\", \"frecuencia de visitas\", \"ticket promedio\". Los resultados se escriben como atributos en el Unified Profile.",
+    glosCIStream: "Versión en tiempo real de los Calculated Insights: el cálculo ocurre en el instante en que llega un evento. Ideal para actualizar un score de propensión o saldo de puntos en tiempo real durante la interacción del cliente.",
+    glosInf: "Ejecución de modelos de Machine Learning propios del cliente (SageMaker, Vertex AI) o nativos de Einstein Prediction Builder. Cada predicción generada (churn, lifetime value, próxima categoría) cuenta como una inferencia. Distinto de los Flex Credits de Agentforce.",
+    glosDQ: "Consultas a un <em>Data Graph</em> de Data Cloud. Se activa principalmente cuando Agentforce consulta el perfil de un cliente. Tarifa muy baja (2 DSC/1M filas) pero puede acumularse con alto volumen. Regla: si filtra por PK → 600K registros; con filtros adicionales → total del DMO.",
+    glosSA: "Acciones disparadas en tiempo real desde Data Cloud hacia sistemas externos: enviar evento a Marketing Cloud, actualizar registro en Sales Cloud, llamar a una API externa, o hacer un lookup enriqueciendo datos en tránsito. Incluye las integraciones bidireccionales de Agentforce con Data Cloud.",
+    glosSRP: "Evaluación de criterios de segmentación sobre los perfiles unificados para construir o actualizar un segmento. Cada vez que Data Cloud recorre los perfiles para calcular quién entra o sale del segmento, se cobran las filas examinadas.",
+    glosBA: "Envío programado de un segmento de audiencia a un canal de marketing: Marketing Cloud Engagement, Meta Ads, Google Ads, Amazon Ads. Data Cloud exporta las filas del segmento al destino en una ventana batch.",
+    glosADS: "Activación en tiempo real de cambios en un DMO hacia sistemas externos. Cuando un perfil cambia de segmento o un atributo se actualiza, el cambio se propaga inmediatamente sin esperar un ciclo batch. Útil para personalización en tiempo real en apps, sitios web o call centers.",
+    glosCE: "Ejecución de código personalizado (Python, Node.js) dentro del entorno de Data Cloud para lógica que no puede expresarse en SQL: algoritmos propietarios, integraciones complejas, validaciones custom. Se factura por <em>Compute Unit</em> (CPU + tiempo de ejecución).",
+    glosSource: "Fuente: Salesforce Data Cloud Rate Card (agosto 2025) · Salesforce Help: \"Data Cloud Credits and Usage\" (help.salesforce.com/s/articleView?id=sf.c360_a_data_credits.htm) · Documentación de producto: Salesforce Data Cloud Platform Services.",
+  },
+  pt: {
+    tabDC: "Calculadora — Data Cloud",
+    tabRates: "Tarifas de referência",
+    tabAgents: "Calculadora — Agentes",
+    howTo: "Como usar:",
+    dcStep1: "Preencha as células editáveis de cada linha: caso de uso, tipo, ambiente, volume e frequência.",
+    dcStep2: "Os créditos são calculados automaticamente. <em>Volume</em> = linhas processadas por execução.",
+    dcStep3: "Para streaming ou consumos pontuais, escolha \"Mensual / Puntual\" e insira o total mensal.",
+    dcStep4: "Revise o total e o detalhamento à direita. Insira seu allowance para ver o runway.",
+    warningTitle: "Nota: consumo especial do Data Graph",
+    warningTransform: "o Data Graph é gerado/atualizado → some todos os registros de <em>input</em> do Data Transform para obter os registros processados por execução. Tarifa: <span class=\"formula\">400 créditos por 1M registros</span>.",
+    warningQueries: "cada consulta ao Data Graph consome Data Queries. Tarifa: <span class=\"formula\">2 créditos por 1M registros</span>. Para estimar o volume: se a consulta filtra apenas pela PK do objeto principal → assumir <span class=\"formula\">600.000 registros por consulta</span>. Com filtros adicionais → assumir o total de registros do DMO principal no DG.",
+    casosTitle: "Casos de uso", casosSubtitle: "Células editáveis em cada linha",
+    colUseCase: "Caso de uso", colUsageType: "Usage Type", colEnv: "Ambiente", colUnit: "Unidade",
+    colVol: "Volume / execução", colFreq: "Frequência", colExec: "Exec./mês",
+    colMonthVol: "Vol. mensal", colCredits: "Créditos/mês",
+    addUseCase: "Adicionar caso de uso",
+    dcSource: "Fonte de tarifas: Salesforce Customer Data Cloud — Rate Card, Última atualização agosto 2025.",
+    summaryTitle: "Resumo mensal", totalCredits: "Total créditos / mês",
+    allowanceLabel: "Allowance disponível (opcional)", creditsYear: "Créditos/ano",
+    runwayMonths: "Meses de runway", allowancePct: "% allowance / ano",
+    runwayNote: "Meses de runway = quantos meses dura o allowance no ritmo atual de consumo.",
+    ratesTitle: "Tarifas — Salesforce Data Cloud", ratesSubtitle: "Rate Card · Última atualização agosto 2025",
+    ratesSource: "Fonte: Salesforce Customer Data Cloud Platform Services — Rate Card agosto 2025. Multiplicadores em Data Services Credits (DSC).",
+    agStep1: "Preencha cada agente: nome, tipo de complexidade, ambiente, interações mensais e ações por interação.",
+    agStep2: "Os Flex Credits são calculados automaticamente. Fórmula: <em>Vol. mensal × ações × FC por ação</em>.",
+    agStep3: "Se o agente consulta Data Cloud, ative o toggle — os DSC de queries são calculados separadamente.",
+    agStep4: "Aplique um buffer de segurança conforme a maturidade do caso de uso.",
+    fcRefTitle: "Tarifas Flex Credits (FC) — referência rápida",
+    fcTip1: "<strong>Ação padrão:</strong> <span class=\"fc\">20 FC / ação</span> em produção · <span class=\"fc\">16 FC</span> em sandbox.",
+    fcTip2: "<strong>Ação de voz:</strong> <span class=\"fc\">30 FC / ação</span> em produção · <span class=\"fc\">24 FC</span> em sandbox. 50% mais cara que padrão.",
+    fcTip3: "<strong>Prompt padrão (LLM):</strong> <span class=\"fc\">4 FC / 2.000 tokens</span> · Prompt avançado: <span class=\"fc\">16 FC / 2.000 tokens</span>.",
+    fcTip4: "<strong>Help Agent resolution:</strong> <span class=\"fc\">400 FC / resolução bem-sucedida</span>.",
+    fcTip5: "<strong>Turnos sem ação</strong> (saudações, chit-chat) não consomem crédito.",
+    fcTip6: "<strong>Dica:</strong> slot fill economiza créditos — pedir vários dados em 1 turno (20 FC) vs. 3 turnos separados (60 FC).",
+    fcTip7: "<strong>Atenção:</strong> Flows e Apex dentro do agente NÃO reduzem o consumo — cobrança é pela ação disparada. Atlas Reasoning é o \"principal consumidor\" de créditos em agentes super-projetados.",
+    agentsTitle: "Agentes", agentsSubtitle: "Preencha as células de cada agente",
+    agColName: "Agente / caso de uso", agColType: "Tipo / complexidade", agColEnv: "Ambiente",
+    agColInterac: "Interac. / mês", agColActions: "Ações / turno",
+    agColFC: "FC / ação", agColFCMonth: "FC / mês",
+    addAgent: "Adicionar agente",
+    agSource: "Fonte: Salesforce Agentforce Flex Credits Rate Card.",
+    unmeteredTitle: "Agentes internos: possível cenário unmetered",
+    unmetered1: "Agentes internos iniciados por humanos (botões, Quick Actions, Einstein for Service) podem ser <strong>unmetered</strong> com o Add-on correto — não consomem Flex Credits.",
+    unmetered2: "Requer PSL <strong>\"Unmetered User Based AI\"</strong> atribuída por usuário. Sem essa PSL, consomem crédito mesmo que teoricamente gratuitos.",
+    unmetered3: "Agentes autônomos (trigger automático, sem intervenção humana) são sempre metered.",
+    agSummaryTitle: "Resumo — Agentforce", totalFC: "Total Flex Credits / mês",
+    bufferTitle: "Buffer de segurança",
+    bufNone: "Sem buffer", buf20: "+20% moderado", buf30: "+30% agressivo", buf50: "+50% incerto",
+    fcWithBuffer: "FC com buffer",
+    breakdownTitle: "Detalhamento por tipo",
+    agAllowanceLabel: "Allowance Flex Credits (opcional)", fcYearEst: "FC/ano estimado",
+    agRunwayNote: "Runway = quantos meses dura o allowance no ritmo atual.",
+    tabGlosario: "Glossário de Usage Types",
+    glosarioTitle: "Glossário — Usage Types de Data Services Credits",
+    glosarioSubtitle: "O que significa cada tipo de consumo e quando ele é gerado",
+    glosarioIntro: "Cada linha da calculadora corresponde a um <strong>Usage Type</strong> — uma operação cobrada em Data Services Credits (DSC). A tabela abaixo explica o que cada tipo faz, em qual cenário é ativado e qual é a unidade de medida.",
+    glosCatConnectDesc: "Ingestão, transformação e preparação de dados no Data Cloud",
+    glosCatRTDesc: "Eventos e ações em tempo real sub-segundo",
+    glosCatAnalyzeDesc: "Insights calculados, previsões e inferências de modelos de IA",
+    glosCatActDesc: "Consultas e ações de ativação baseadas em dados do Data Graph",
+    glosCatSegDesc: "Construção de segmentos e envio de audiências para canais",
+    glosCatComputeDesc: "Extensões de código e lógica personalizada",
+    glosColType: "Usage Type", glosColDesc: "Descrição", glosColUnit: "Unidade de medida",
+    glosIDP: "Move dados de nuvens Salesforce internas (Sales Cloud, Service Cloud, Marketing Cloud, etc.) para o Data Cloud pelos conectores nativos do Salesforce. <strong>Tarifa zero</strong>: a Salesforce não cobra DSC por essa ingestão — é o mecanismo preferido para trazer dados CRM próprios.",
+    glosEDPBatch: "Ingestão em lote de fontes externas à Salesforce: bancos de dados on-premise, data lakes, arquivos CSV/JSON via API, buckets S3, etc. Os dados são processados, mapeados para DMOs e gravados no armazém do Data Cloud. Cobrado por milhão de linhas processadas.",
+    glosEDPStream: "Ingestão contínua em tempo real de fontes externas: eventos de apps móveis, cliques web, streams Kafka, webhooks. Os dados chegam em fluxo constante e são processados quase em tempo real. Tarifa mais alta que batch pelo processamento contínuo.",
+    glosDTBatch: "Transformações SQL programadas que consolidam, enriquecem ou calculam métricas sobre DMOs existentes no Data Cloud. Também é ativado quando um Data Graph é gerado ou atualizado. Executadas em janelas horárias ou diárias.",
+    glosDTStream: "Versão em tempo real dos Data Transforms: as regras SQL são aplicadas sobre o stream de dados conforme chegam. Ideal para enriquecimentos imediatos, como calcular o score de um cliente no instante da transação.",
+    glosUDP: "Processamento de conteúdo não estruturado: documentos PDF, transcrições, emails, imagens. O Data Cloud extrai texto, vetoriza e armazena embeddings para busca semântica e casos de IA generativa. Cobrado por megabyte processado.",
+    glosIP: "Processamento de dados não estruturados com modelos de IA integrados: OCR, extração de entidades (NER), classificação automática, análise de sentimento. Ativado quando o Data Cloud aplica um modelo de ML na etapa de ingestão. Tarifa mais alta que Unstructured Data pelo custo computacional da inferência.",
+    glosFed: "Acesso a dados federados que residem em sistemas externos sem movê-los para o Data Cloud: Snowflake, BigQuery, Redshift via Zero-Copy ou Data Federation. Cada linha lida do sistema externo conta. O dado nunca é copiado — apenas consultado na origem.",
+    glosShare: "Compartilhamento de dados processados no Data Cloud para sistemas externos: exportar segmentos para Snowflake, publicar perfis unificados em um data lake próprio do cliente. Cobrado pelas linhas enviadas \"para fora\" do ecossistema Data Cloud.",
+    glosPC: "Transferência de dados pelo Salesforce Private Connect — conexão privada e criptografada sem passar pela internet pública (equivalente ao AWS PrivateLink). Cobrado por gigabyte transferido. Recomendado para setores regulados (bancos, saúde).",
+    glosPU: "O motor de Identity Resolution do Data Cloud compara, deduplica e consolida registros de diferentes fontes para construir um Unified Individual Profile. Cada linha processada na execução do IR conta. É o usage type mais caro da categoria.",
+    glosSRTE: "Processamento de eventos com latência sub-segundo: um evento chega, enriquece o perfil unificado em tempo real e dispara uma ação — tudo em menos de 1 segundo. É o mecanismo que alimenta a \"próxima melhor oferta\" no momento exato da interação. É a tarifa mais alta de toda a Rate Card.",
+    glosCIBatch: "Métricas e KPIs calculados via SQL sobre os perfis unificados, executados em janelas programadas. Exemplos: \"total gasto em 90 dias\", \"frequência de visitas\", \"ticket médio\". Os resultados são gravados como atributos no Unified Profile.",
+    glosCIStream: "Versão em tempo real dos Calculated Insights: o cálculo ocorre no instante em que um evento chega. Ideal para atualizar um score de propensão ou saldo de pontos em tempo real durante a interação do cliente.",
+    glosInf: "Execução de modelos de Machine Learning próprios do cliente (SageMaker, Vertex AI) ou nativos do Einstein Prediction Builder. Cada previsão gerada (churn, lifetime value, próxima categoria) conta como uma inferência. Diferente dos Flex Credits do Agentforce.",
+    glosDQ: "Consultas a um <em>Data Graph</em> do Data Cloud. Ativado principalmente quando o Agentforce consulta o perfil de um cliente. Tarifa muito baixa (2 DSC/1M linhas) mas pode acumular com alto volume. Regra: se filtra por PK → 600K registros; com filtros adicionais → total do DMO.",
+    glosSA: "Ações disparadas em tempo real do Data Cloud para sistemas externos: enviar evento para Marketing Cloud, atualizar registro no Sales Cloud, chamar uma API externa ou fazer lookup enriquecendo dados em trânsito. Inclui as integrações bidirecionais do Agentforce com Data Cloud.",
+    glosSRP: "Avaliação de critérios de segmentação sobre os perfis unificados para construir ou atualizar um segmento de audiência. Cada vez que o Data Cloud percorre os perfis para calcular quem entra ou sai do segmento, as linhas examinadas são cobradas.",
+    glosBA: "Envio programado de um segmento de audiência para um canal de marketing: Marketing Cloud Engagement, Meta Ads, Google Ads, Amazon Ads. O Data Cloud exporta as linhas do segmento para o destino em uma janela batch.",
+    glosADS: "Ativação em tempo real de mudanças em um DMO para sistemas externos. Quando um perfil muda de segmento ou um atributo é atualizado, a mudança é propagada imediatamente sem aguardar ciclo batch. Útil para personalização em tempo real em apps, sites ou call centers.",
+    glosCE: "Execução de código personalizado (Python, Node.js) no ambiente do Data Cloud para lógica que não pode ser expressa em SQL: algoritmos proprietários, integrações complexas, validações customizadas. Cobrado por <em>Compute Unit</em> (CPU + tempo de execução).",
+    glosSource: "Fonte: Salesforce Data Cloud Rate Card (agosto 2025) · Salesforce Help: \"Data Cloud Credits and Usage\" (help.salesforce.com/s/articleView?id=sf.c360_a_data_credits.htm) · Documentação do produto: Salesforce Data Cloud Platform Services.",
+  },
+  en: {
+    tabDC: "Calculator — Data Cloud",
+    tabRates: "Reference Rates",
+    tabAgents: "Calculator — Agents",
+    howTo: "How to use:",
+    dcStep1: "Fill in the editable cells for each row: use case, type, environment, volume, and frequency.",
+    dcStep2: "Credits calculate automatically. <em>Volume</em> = rows processed per execution.",
+    dcStep3: "For streaming or one-time use, select \"Mensual / Puntual\" and enter the monthly total.",
+    dcStep4: "Review the total and breakdown on the right. Enter your allowance to see the runway.",
+    warningTitle: "Note: special Data Graph consumption",
+    warningTransform: "triggers Data Graph creation/update → sum all input records from the Data Transform to get records processed per execution. Rate: <span class=\"formula\">400 credits per 1M records</span>.",
+    warningQueries: "each query to the Data Graph consumes Data Queries. Rate: <span class=\"formula\">2 credits per 1M records</span>. To estimate volume: if the query filters only by the primary object PK → assume <span class=\"formula\">600,000 records per query</span>. With additional filters → assume all records of the main DMO in the DG.",
+    casosTitle: "Use Cases", casosSubtitle: "Editable cells in each row",
+    colUseCase: "Use Case", colUsageType: "Usage Type", colEnv: "Environment", colUnit: "Unit",
+    colVol: "Volume / execution", colFreq: "Frequency", colExec: "Exec./mo",
+    colMonthVol: "Monthly vol.", colCredits: "Credits/mo",
+    addUseCase: "Add use case",
+    dcSource: "Rate source: Salesforce Customer Data Cloud — Rate Card, Last Updated August 2025.",
+    summaryTitle: "Monthly Summary", totalCredits: "Total credits / month",
+    allowanceLabel: "Available allowance (optional)", creditsYear: "Credits/year",
+    runwayMonths: "Runway months", allowancePct: "% allowance / year",
+    runwayNote: "Runway months = how many months the allowance lasts at the current consumption rate.",
+    ratesTitle: "Rates — Salesforce Data Cloud", ratesSubtitle: "Rate Card · Last Updated August 2025",
+    ratesSource: "Source: Salesforce Customer Data Cloud Platform Services — Rate Card August 2025. Multipliers in Data Services Credits (DSC).",
+    agStep1: "Fill in each agent: name, complexity type, environment, monthly interactions, and actions per interaction.",
+    agStep2: "Flex Credits calculate automatically. Formula: <em>Monthly vol. × actions × FC per action</em>.",
+    agStep3: "If the agent queries Data Cloud, activate the toggle — DSC from queries are calculated separately.",
+    agStep4: "Apply a security buffer based on use case maturity.",
+    fcRefTitle: "Flex Credits (FC) Rates — quick reference",
+    fcTip1: "<strong>Standard action:</strong> <span class=\"fc\">20 FC / action</span> in production · <span class=\"fc\">16 FC</span> in sandbox.",
+    fcTip2: "<strong>Voice action:</strong> <span class=\"fc\">30 FC / action</span> in production · <span class=\"fc\">24 FC</span> in sandbox. 50% more expensive than standard.",
+    fcTip3: "<strong>Standard prompt (LLM):</strong> <span class=\"fc\">4 FC / 2,000 tokens</span> · Advanced prompt: <span class=\"fc\">16 FC / 2,000 tokens</span>.",
+    fcTip4: "<strong>Help Agent resolution:</strong> <span class=\"fc\">400 FC / successful resolution</span>.",
+    fcTip5: "<strong>Turns without action</strong> (greetings, chit-chat) do not consume credits.",
+    fcTip6: "<strong>Tip:</strong> slot fill saves credits — requesting multiple data in 1 turn (20 FC) vs. 3 separate turns (60 FC).",
+    fcTip7: "<strong>Note:</strong> Flows and Apex running inside agents do NOT reduce consumption — billing is per triggered action. Atlas Reasoning is the top credit consumer in over-engineered agents.",
+    agentsTitle: "Agents", agentsSubtitle: "Fill in each agent's cells",
+    agColName: "Agent / use case", agColType: "Type / complexity", agColEnv: "Environment",
+    agColInterac: "Interact. / mo", agColActions: "Actions / turn",
+    agColFC: "FC / action", agColFCMonth: "FC / mo",
+    addAgent: "Add agent",
+    agSource: "Source: Salesforce Agentforce Flex Credits Rate Card.",
+    unmeteredTitle: "Internal agents: possible unmetered scenario",
+    unmetered1: "Human-initiated internal agents (buttons, Quick Actions, Einstein for Service) may be <strong>unmetered</strong> with the correct Add-on — do not consume Flex Credits.",
+    unmetered2: "Requires <strong>\"Unmetered User Based AI\"</strong> Permission Set License assigned per user. Without that PSL, credits are consumed even if theoretically free.",
+    unmetered3: "Autonomous agents (automatic trigger, no human intervention) are always metered.",
+    agSummaryTitle: "Summary — Agentforce", totalFC: "Total Flex Credits / month",
+    bufferTitle: "Security buffer",
+    bufNone: "No buffer", buf20: "+20% moderate", buf30: "+30% aggressive", buf50: "+50% uncertain",
+    fcWithBuffer: "FC with buffer",
+    breakdownTitle: "Breakdown by type",
+    agAllowanceLabel: "Flex Credits allowance (optional)", fcYearEst: "Est. FC/year",
+    agRunwayNote: "Runway = how many months the allowance lasts at the current pace.",
+    tabGlosario: "Usage Types Glossary",
+    glosarioTitle: "Glossary — Data Services Credits Usage Types",
+    glosarioSubtitle: "What each consumption type means and when it is incurred",
+    glosarioIntro: "Each row in the calculator corresponds to a <strong>Usage Type</strong> — an operation billed in Data Services Credits (DSC). The table below explains what each type does, in which scenario it is triggered, and what the unit of measure is.",
+    glosCatConnectDesc: "Data ingestion, transformation and preparation in Data Cloud",
+    glosCatRTDesc: "Sub-second real-time events and actions",
+    glosCatAnalyzeDesc: "Calculated insights, predictions and AI model inferences",
+    glosCatActDesc: "Queries and activation actions based on Data Graph data",
+    glosCatSegDesc: "Segment building and audience delivery to channels",
+    glosCatComputeDesc: "Code extensions and custom logic",
+    glosColType: "Usage Type", glosColDesc: "Description", glosColUnit: "Unit of measure",
+    glosIDP: "Moves data from internal Salesforce clouds (Sales Cloud, Service Cloud, Marketing Cloud, etc.) into Data Cloud via native Salesforce connectors. <strong>Zero rate</strong>: Salesforce does not charge DSC for this ingestion — it is the preferred mechanism for bringing in first-party CRM data.",
+    glosEDPBatch: "Batch ingestion from sources external to Salesforce: on-premise databases, data lakes, CSV/JSON files uploaded via API, S3 buckets, etc. Data is processed, mapped to DMOs, and written to the Data Cloud store. Billed per million rows processed.",
+    glosEDPStream: "Continuous real-time ingestion from external sources: mobile app events, web clicks, Kafka streams, webhooks. Data arrives in a constant flow and is processed near real-time. Higher rate than batch due to continuous processing infrastructure.",
+    glosDTBatch: "Scheduled SQL transformations that consolidate, enrich, or compute metrics over existing DMOs in Data Cloud. Also triggered when a Data Graph is created or updated. Run in hourly or daily windows.",
+    glosDTStream: "Real-time version of Data Transforms: SQL rules are applied to the data stream as it arrives. Ideal for immediate enrichments such as computing a customer score at the exact moment of a transaction.",
+    glosUDP: "Processing of unstructured content: PDFs, call transcripts, emails, images. Data Cloud extracts text, vectorizes, and stores embeddings for semantic search and generative AI use cases. Billed per megabyte processed.",
+    glosIP: "Processing of unstructured data using integrated AI models: OCR on documents, Named Entity Recognition (NER), automatic ticket classification, sentiment analysis. Triggered when Data Cloud applies an ML model during ingestion. Higher rate than Unstructured Data due to inference compute cost.",
+    glosFed: "Access to federated data that resides in external systems without copying it into Data Cloud: Snowflake, BigQuery, Redshift via Zero-Copy or Data Federation. Each row read from the external system counts. The data is never copied — only queried at the source.",
+    glosShare: "Sharing processed data from Data Cloud to external systems: exporting segments to Snowflake, publishing unified profiles to the customer's own data lake. Billed per row sent \"outbound\" from the Data Cloud ecosystem.",
+    glosPC: "Data transfer via Salesforce Private Connect — a private, encrypted connection that bypasses the public internet (equivalent to AWS PrivateLink). Billed per gigabyte transferred. Recommended for regulated industries (banking, healthcare).",
+    glosPU: "Data Cloud's Identity Resolution engine compares, deduplicates, and consolidates records from different sources to build a Unified Individual Profile. Each row processed during the IR run counts. It is the most expensive usage type in this category.",
+    glosSRTE: "Event processing with sub-second latency: an event arrives, enriches the unified profile in real time, and triggers an action — all in under 1 second. This is the mechanism powering \"next best offer\" at the exact moment of interaction. It carries the highest rate in the entire Rate Card.",
+    glosCIBatch: "Metrics and KPIs computed via SQL over unified profiles, run on a scheduled basis (hourly, daily, weekly). Examples: \"total spent in 90 days\", \"visit frequency\", \"average ticket\". Results are written as attributes on the Unified Profile.",
+    glosCIStream: "Real-time version of Calculated Insights: the computation happens at the instant an event arrives. Ideal for updating a propensity score or loyalty points balance in real time during customer interaction.",
+    glosInf: "Execution of customer-owned ML models (SageMaker, Vertex AI) or native Einstein Prediction Builder models over Data Cloud profiles. Each prediction generated (churn probability, lifetime value, next-best category) counts as one inference. Distinct from Agentforce Flex Credits.",
+    glosDQ: "Queries against a Data Cloud <em>Data Graph</em>. Triggered primarily when Agentforce queries a customer profile to personalize a response. Very low rate (2 DSC/1M rows) but can accumulate at high volume. Estimation rule: PK-only filter → 600K rows; additional filters → total DMO records.",
+    glosSA: "Real-time actions triggered from Data Cloud to external systems: sending an event to Marketing Cloud Engagement, updating a record in Sales Cloud, calling an external API, or performing a lookup enriching data in transit. Includes bidirectional Agentforce–Data Cloud integrations.",
+    glosSRP: "Evaluation of segmentation criteria over unified profiles to build or refresh an audience segment. Every time Data Cloud scans profiles to determine who enters or exits a segment, the examined rows are billed. Segments with frequent refresh (hourly or daily) generate higher consumption.",
+    glosBA: "Scheduled delivery of an audience segment to a marketing channel: Marketing Cloud Engagement, Meta Ads, Google Ads, Amazon Ads. Data Cloud exports the segment rows to the destination in a batch window.",
+    glosADS: "Real-time activation of DMO changes to external systems. When a profile changes segment or an attribute is updated, the change propagates immediately without waiting for a batch cycle. Ideal for real-time personalization in apps, websites, or call centers.",
+    glosCE: "Execution of custom code (Python, Node.js) within the Data Cloud environment for logic that cannot be expressed in SQL: proprietary scoring algorithms, complex integrations, custom validations. Billed per <em>Compute Unit</em> (CPU + execution time).",
+    glosSource: "Source: Salesforce Data Cloud Rate Card (August 2025) · Salesforce Help: \"Data Cloud Credits and Usage\" (help.salesforce.com/s/articleView?id=sf.c360_a_data_credits.htm) · Product documentation: Salesforce Data Cloud Platform Services.",
+  }
+};
+
+let currentLang = 'es';
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', ['es','pt','en'][i] === lang);
+  });
+  applyI18n();
+}
+
+function applyI18n() {
+  const d = I18N[currentLang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (d[key] !== undefined) {
+      el.innerHTML = d[key];
+    }
+  });
+}
+</script>
+</body>
+</html>
